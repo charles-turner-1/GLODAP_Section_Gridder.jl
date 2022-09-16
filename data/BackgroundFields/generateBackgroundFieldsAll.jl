@@ -1,4 +1,4 @@
-include("/home/ct/Julia/DIVA_WrapperFunctions.jl")
+include("../src/DIVA_WrapperFunctions.jl")
 using Plots
 
 const GLODAP_DIR = "/home/ct/MATLAB/GLODAP"
