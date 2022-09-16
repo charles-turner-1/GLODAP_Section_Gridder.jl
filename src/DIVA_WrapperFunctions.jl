@@ -287,17 +287,22 @@ function gridSigDistance(sigmaGrid::Vector{Float64})
     return sigmaMeanDist
 end
 
-function calcScaleFactors(verticalDistance::Vector,horizontalDistance::Vector)
-
+function calcScaleFactors(verticalDistance::Vector,horizontalDistance::Vector
+                         ;printScales=true)
+    # Calculate vertical and horizontal scale factors, print them out (if desired)
+    # and return them
      dP_grid, dL_grid = ndgrid(verticalDistance,horizontalDistance)
      scaleVert = ones(size(dP_grid)) ./ dP_grid
      scaleHorz = ones(size(dL_grid)) ./ dL_grid
-     println("Horizontal scale factor: ", mean(scaleHorz))
-     println("Vertical scale factor: ", mean(scaleVert))
+     if printScales
+        println("Horizontal scale factor: ", mean(scaleHorz))
+        println("Vertical scale factor: ", mean(scaleVert))
+     end
      return scaleVert, scaleHorz
 end
 
 function splitMeanAnom(variable::Vector{Float64})
+    # Remove the mean value from a vector.
     varAnom =  variable .- mean(filter(!isnan,variable))
     varMean = mean(filter(!isnan,variable))
     return varMean, varAnom
@@ -307,7 +312,8 @@ end
 function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #kwargs might not be necessary since this is at the bottom of the call stack
                       ,obsLatLon::Vector{Float64},bgField::Matrix{Float64}
                       ,vertGrid::Vector{Float64},horzGrid::Vector{Float64})
-
+    # Remove the mean value from a vector, removing the horizontal mean value at 
+    # each depth
     lowVert = vertGrid[1:end-1]; highVert = vertGrid[2:end]
     lowHorz = horzGrid[1:end-1]; highHorz = horzGrid[2:end]
 
