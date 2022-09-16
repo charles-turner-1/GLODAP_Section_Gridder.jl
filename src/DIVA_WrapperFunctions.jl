@@ -341,53 +341,17 @@ function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #k
     return varAnom
 end
 
-function splitMeanAnomAlt(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #kwargs might not be necessary since this is at the bottom of the call stack
-                      ,obsLatLon::Vector{Float64},bgField::Matrix{Float64}
-                      ,vertGrid::Vector{Float64},horzGrid::Vector{Float64})
-
-    obsXvals = unique(obsLatLon)
-    varAnom = fill(NaN,length(obsVariable))
-
-    for xVal in obsXvals
-        # Run through each station and find the closest horzGrid value. Then run
-        # through the station and find the closest background field cell to each
-        # observation and subtract the background field value there.
-
-        colIdx = argmin(abs.(horzGrid .- xVal))
-
-        stnPres = obsPres[obsLatLon.==xVal]
-        stnVar = obsVariable[obsLatLon.==xVal]
-
-        @threads for pVal in obsPres
-            rowIdx = argmin(abs.(vertGrid .- pVal))
-            bgVal = bgField[rowIdx,colIdx]
-
-            # We now need the index of the observation we are looking at.
-            obsIdxP = findall(obsPres .== pVal)
-            obsIdxX = findall(obsLatLon .== xVal)
-
-            obsIdx = intersect(obsIdxP,obsIdxX)
-
-            length(obsIdx) > 0 ? varAnom[obsIdx[1]] = obsVariable[obsIdx[1]] - bgVal : nothing
-        end
-    end
-    return varAnom
-end
-
-function findNaNIndices(variable::Vector)
-    goodIdx = findall(convert(Vector{Bool},fill(0,size(variable)) + isnan.(variable)))
-    return goodIdx
-end
-
 function findNonNaNIndices(variable::Vector)
+    # Very simple function to find indices where vector isn't NaN
     goodIdx = findall(convert(Vector{Bool},fill(1,size(variable)) - isnan.(variable)))
     return goodIdx
 end
 
-function findNonNaNIndices(variable::Vector,gamma::Vector)
+function findNonNaNIndices(variable::Vector,sigma::Vector)
+    # Find all indices where our vector isn't NaN, and the sigma vector isn't NaN
     varGoodIdx = findall(convert(Vector{Bool},fill(1,size(variable)) - isnan.(variable)))
-    gamGoodIdx = findall(convert(Vector{Bool},fill(1,size(gamma)) - isnan.(gamma)))
-    goodIdx = intersect(varGoodIdx,gamGoodIdx)
+    sigGoodIdx = findall(convert(Vector{Bool},fill(1,size(sigma)) - isnan.(sigma)))
+    goodIdx = intersect(varGoodIdx,sigGoodIdx)
     return goodIdx
 end
 
@@ -395,7 +359,7 @@ function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
                                ;latitudes::Union{Vector{Float64},Nothing}=nothing
                                ,meanLatitude::Union{Float64,Nothing}=nothing
                                ,horzCoordinate::Union{String,Nothing}=nothing)
-
+    # Calculate horizontal correlation length in Kilometres
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -423,8 +387,7 @@ function calcCorrLengths(variable::Vector{Float64}
                                 ,pressureStepNumber::Integer=10
                                 ,verticalSearchRange::Number=100
                                 ,lenxFactor::Number=1)
-
-
+    # Calculate vertical and horizontal correlation lengths
     goodIdx = findNonNaNIndices(variable)
 
     length(goodIdx) < 1 ? error("No observations found") : nothing
@@ -471,7 +434,8 @@ end
 
 function corrLengthVectorToMatrix(lenX::Vector{Float64},lenZ::Vector{Float64}
                                  ,presGrid::Vector{Float64}, llGrid::Vector{Float64})
-
+    # Take the correlation length vectors, and turn them into matrices the same 
+    # size as our mask
     sz = (length(presGrid),length(llGrid))
     lenXgrid = fill(1.0,sz)
     lenZgrid = fill(1.0,sz)
@@ -495,7 +459,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
                                 ,lenxPrescribed::Float64
                                 ,sigmaStepNumber::Integer=10
                                 ,verticalSearchRange::Float64=0.0001)
-
+    # Calculate correlation lengths in density space.
     goodIdx = findNonNaNIndices(variable,obsSigma)
     lenz, infoz = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
     ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=verticalSearchRange
@@ -550,7 +514,7 @@ function easyDIVAGrid(;variable::Vector{Float64}
                       ,Epsilon::Float64
                       ,horzCorrLength::Vector{Float64}
                       ,vertCorrLength::Vector{Float64})
-
+    # This is the wrapped that calls DIVAnd.
 
     if horzCoordinate == "longitude"
         latLon = matchLonConventions(horzGrid,latLon)
@@ -590,25 +554,20 @@ function easyDIVAGrid(;variable::Vector{Float64}
 end
 
 function hasDataFlags(variableName::String)
-    flagsExist = false
+    # Check whether we are gridding a varible which has flagged data
     flaggedVariables = ["G2aou","G2c13","G2c14","G2ccl4","G2cfc113","G2cfc11"
             ,"G2cfc12","G2chla","G2doc","G2fco2","G2h3","G2he3","G2neon"
             ,"G2nitrate","G2nitrite","G2o18","G2oxygen","G2phosphate"
             ,"G2phtsinsitutp","G2salinity","G2sf6","G2silicate","G2talk"
             ,"G2tco2","G2tdn","G2toc"]
 
-    numHits = findall(flaggedVariables.==variableName)
-    if length(numHits) > 0
-        flagsExist = true
+    if variableName in flaggedVariables; return true 
+    else; return false 
     end
-    return flagsExist
 end
 
-
-
-
 function removeFlaggedData(variable::Vector{Float64}, variable_fFlag::Vector{Float64})
-
+    # Remove data which has been flagged as being bad
     outputVar = copy(variable)
     outputVar[variable_fFlag .!= 2] .= NaN
     if length(filter(!isnan,outputVar)) == 0
@@ -623,7 +582,8 @@ end
 function createDensitySpaceMask(obsSigma::Vector{Float64}, obsLonLat::Vector{Float64}
                                ,lonLatGrid::Vector{Float64}, sigmaGrid::Vector{Float64}
                                ,pressureSpaceMask::Matrix{Bool})
-
+    # Create a mask for gridding observations in density space. This will stop 
+    # flat grids gridding through ridges and whatnot. Might not actually be necessary.
     uniqueStations = unique(obsLonLat)
     sort!(uniqueStations)
 
@@ -695,7 +655,7 @@ function easyDIVAisopycnal(;obsVariable::Vector{Float64}
                       ,horzCorrLength::Vector{Float64}
                       ,horzCorrLengthPrescribed::Float64
                       ,vertCorrLength::Vector{Float64})
-
+    # Applies DIVA gridding on density surfaces.
     if latLon == obsLon
         obsLon = matchLonConventions(horzGrid,obsLon)
         horzCoordinate = "longitude"
@@ -768,7 +728,7 @@ function gridCruisePipeline(;glodapDir::String="/Users/ct6g18/MATLAB/GLODAP"
                             ,autoTruncateMask::Bool=false
                             ,crossValidate::Bool=false
                             ,crossValidationNum::Int64=5)
-
+    # Calls all the functions necessary to grid a single cruise.
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -916,8 +876,8 @@ function gridSectionPipeline(;glodapDir::String="/Users/ct6g18/MATLAB/GLODAP"
                             ,epsilonVal::Float64=0.01
                             ,autoTruncateMask::Bool=false
                             ,variableName::String)
-
-                            # Check that oxygen has flagging
+    # Calls all the functions necessary to grid all the cruises from an entire 
+    # section
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -1087,7 +1047,7 @@ end
 
 function loadExceptionData(;expocode::Union{String,String15},variableName::String
                                ,maskMatfile::String)
-
+    # Load exception data from one of our exception datafiles
     exceptionDir, _  = splitdir(maskMatfile)
     exceptionData = joinpath(exceptionDir,"Exceptions/ExceptionData",expocode*".mat")
     SectionFile = MatFile(exceptionData)
@@ -1121,8 +1081,7 @@ function easyDIVACrossValidate(;variable::Vector{Float64}
                                ,numLengthVals::Int64=5
                                ,numEpsilonVals::Int64=5
                                ,methodVal::Int64=0)
-
-
+    # Perform DIVA cross validation
     if horzCoordinate == "longitude"
         latLon = matchLonConventions(horzGrid,latLon)
     elseif horzCoordinate != "latitude"
@@ -1147,7 +1106,8 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
                                ,station::Union{Vector{Float64},Nothing} = nothing
                                ,pressure::Union{Vector{Float64},Nothing} = nothing
                                ,glodapDir::String="/home/ct/MATLAB/GLODAP")
-
+    # Check if there are exception data for the variable and cruise we are looking 
+    # at
     if variable === nothing
         vars = loadGLODAPVariables(glodapDir,[variableName,"G2station","G2pressure"]
         ,GLODAP_expocode=expocode)
@@ -1203,6 +1163,7 @@ end
 
 function findGLODAPtco2Adjustment(GLODAP_DIR::String;
     GLODAP_AdjTable::String="AdjustmentTable.csv",expocode::Union{String,String15})
+    # Adjust tCO2 using the GLODAP adjustment table
     
     # This will check whether the expocode we are looking at is in Jens Muller's 
     # recommended adjustments and adjust up here.
@@ -1236,7 +1197,8 @@ end
 function checkHorzLenFactor(;expocode::Union{String,String15},variableName::String
                                ,maskMatfile::String, griddingType::String
                                ,glodapDir::String="/Users/ct6g18/MATLAB/GLODAP")
-
+    # Check whether we have a manual horizonal correlation length exception. If 
+    # so, apply it in the calculations.
     exceptionDir, _  = splitdir(maskMatfile)
     variableExceptionData = joinpath(exceptionDir,"Exceptions/horzLenExceptions.csv")
 
@@ -1257,7 +1219,9 @@ end
 
 function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
                             ,obsLat::Vector{Float64},obsLon::Vector{Float64})
-
+    # Check if the cruise we are gridding didn't occupy the full section. This 
+    # is a simple version which will just look at the recorded latitude and 
+    # longitude values
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -1288,66 +1252,11 @@ function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
     return isPartialCruise
 end
 
-function checkPartialCruise(;glodapDir::String="/home/ct/MATLAB/GLODAP"
-                            ,goshipDir::String="/home/ct/MATLAB/GO_SHIP"
-                            ,maskMatFile::String="/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
-                            ,sectionName::String
-                            ,horzCoordinate::String
-                            ,expocode::AbstractString)
-
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
-
-    # Since we just want to check if we have merged cruises, we can pass longitude
-    # (or latitude) as our variable of interest.
-    isAnException = testExpocodeException(expocode=expocode,variableName="G2longitude",maskMatfile=maskMatFile)
-
-    gridDir, repDir, convDir = loadGoShipDirectories(goshipDir)
-    horzGrid, prGrid, sectionMask = loadSectionInfo(maskMatFile,sectionName,gridDir)
-    griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude"],GLODAP_expocode=expocode)
-
-    if !isAnException
-        griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude"],GLODAP_expocode=expocode)
-    else
-        (_, griddingVars) = loadExceptionData(expocode=expocode
-        ,variableName="G2longitude",maskMatfile=maskMatFile)
-    end
-
-    lon = griddingVars["G2longitude"]
-    lat = griddingVars["G2latitude"]
-
-    if horzCoordinate == "longitude"
-         obsXval = lon
-         lon = matchLonConventions(horzGrid,lon)
-    else
-          obsXval = lat
-    end
-
-    maxGridVal = maximum(horzGrid)
-    minGridVal = minimum(horzGrid)
-
-    maxObsVal = maximum(obsXval)
-    minObsVal = minimum(obsXval)
-
-    ΔminVal = sign(minGridVal)*(minGridVal - minObsVal) # If minGrid << minObs, this will be +ve
-    println("ΔminVal = " * string(ΔminVal))
-    ΔmaxVal = sign(minGridVal)*(maxGridVal - maxObsVal) # If maxGrid << maxObs, this will be +ve
-    println("ΔmaxVal = " * string(ΔmaxVal))
-
-    isPartialCruise = false
-    if ΔmaxVal > 2 || ΔminVal > 2
-        isPartialCruise = true
-    end
-
-    return isPartialCruise
-end
-
 function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
                            ,obsLon::Vector{Float64},horzGrid::Vector{Float64}
                            ,horzCoordinate::String)
-
-
+    # If a cruise is a partial cruise, then mask out the regions where we don't 
+    # have any observations: otherwise it gets filled in with nonsense
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -1380,7 +1289,7 @@ function maskPartialSectionPipeline(;glodapDir::String="/home/ct/MATLAB/GLODAP"
                                   ,sectionName::String
                                   ,horzCoordinate::String
                                   ,variable::Array{Float64})
-
+    # Chain together all the functions needed to mask a partial cruise out
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -1442,7 +1351,7 @@ function checkSectionPartialCruises(;glodapDir::String="/home/ct/MATLAB/GLODAP"
                                   ,maskMatFile::String="/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
                                   ,sectionName::String
                                   ,horzCoordinate::String)
-
+    # Check a section for partial cruises.
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -1602,14 +1511,14 @@ function createBackgroundField(;variable::String,sectionName::String
                               ,horzLenFactor::Number=100
                               ,vertLenFactor::Number=1
                               ,maskMatFile::String="/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat")
-
-    if variable == "G2tco2" || variable == "DIC" || variable == "TCO2"
+    # Create a background field using GLODAP climatology data
+    if variable in ["G2tco2","DIC","TCO2"]
         climatology = Dataset("/home/ct/Julia/GLODAP_Easy_Ocean/Climatologies/GLODAPv2.2016b.TCO2.nc")
         clim_var = climatology["TCO2"][:]
-    elseif variable == "G2theta" || variable == "Temperature" || variable == "TMP"
+    elseif variable in ["G2theta","Temperature","TMP"]
         climatology = Dataset("/home/ct/Julia/GLODAP_Easy_Ocean/Climatologies/GLODAPv2.2016b.temperature.nc")
         clim_var = climatology["temperature"][:]
-    elseif variable == "G2salinity" || variable == "Salinity" || variable == "SAL"
+    elseif variable in ["G2salinity","Salinity","SAL"]
         climatology = Dataset("/home/ct/Julia/GLODAP_Easy_Ocean/Climatologies/GLODAPv2.2016b.salinity.nc")
         clim_var = climatology["salinity"][:]
     end
@@ -1727,7 +1636,7 @@ function writeBackgroundField(;variable::Matrix{Float64},sectionName::String
     # for DIC, salinity and temperature. As a result, we can only write if the
     # variable name is one of these. For convenience, I'm going to force them to
     # be written in the GLODAP nomenculature ie. G2tco2.
-    if variableName != "G2tco2"  && variableName != "G2theta" && variableName != "G2salinity"
+    if variableName ∉ ["G2tco2","G2theta","G2salinity"]
         error("variableName must be either \"G2tco2\", \"G2theta\" or \"G2salinity\"")
     end
 
@@ -1858,17 +1767,15 @@ end
 
 function calcGLODAP_Date(glodapYear::Vector{Float64},glodapMonth::Vector{Float64}
                         ,glodapDay::Vector{Float64})
-
+    # Calculate a mean date for a cruise
     glodapMonth .-= 1
-    
     glodapDate = glodapYear + (glodapMonth ./ 12) + (glodapDay ./ 30)
-
     return glodapDate
 end
 
 function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #kwargs might not be necessary since this is at the bottom of the call stack
                       ,bgField::Vector{Float64},vertGrid::Vector{Float64})
-
+    # Remove the mean value from observations at each index of our vertical grid
     lowVert = vertGrid[1:end-1]; highVert = vertGrid[2:end]
 
     varMean= fill(NaN,length(obsVariable))
@@ -1891,7 +1798,7 @@ end
 function expocodeFromG2cruise(;GLODAPdir::String= "/Users/ct6g18/MATLAB/GLODAP"
     ,GLODAPdataFilename::String="GLODAPv2.2021_Merged_Master_File.mat"
     ,G2cruise::Union{Float64,Vector{Float64}})
-
+    # Get an expocode back from a value of G2cruise
     if length(G2cruise) > 1
         G2cruise = G2cruise[1]
     end
@@ -1910,6 +1817,7 @@ function expocodeFromG2cruise(;GLODAPdir::String= "/Users/ct6g18/MATLAB/GLODAP"
 end
 
 function matchLonConventions(lonGrid::Vector{Float64}, lonVal::Float64)
+    # Match a single longitude value up with conventions
     if maximum(lonGrid) > 180 && lonVal < 0
         lonVal += 360
     end
