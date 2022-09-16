@@ -32,9 +32,10 @@ function loadGoShipDirectories(GOSHIP_DIR)
 end
 
 function listAvailableMasks(Mask_MatFile::String)
+    # Reads the section mask file and returns the available masks.
     SectionMaskFile = MatFile(Mask_MatFile)
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
-    println(" ");println("Available WOCE Section Masks:")
+    println("\nAvailable WOCE Section Masks:")
     for key in maskDict
         println(key.first)
     end
@@ -42,6 +43,7 @@ end
 
 function loadSectionInfo(Mask_MatFile::String, sectionName::String,
     Grid_Directory::String = "go_ship_clean_ctd/gridded/")
+    # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
     SectionMaskFile = MatFile(Mask_MatFile)
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     sectionMaskName = maskNameFromSectionName(sectionName)
@@ -78,6 +80,8 @@ function loadSectionInfo(Mask_MatFile::String, sectionName::String,
 end
 
 function matchLonConventions(lonGrid::Vector{Float64}, lonVals::Vector{Float64})
+    # GO-SHIP Easy Ocean toolbox and GLODAP use different longitude conventions
+    # ie. lon ⋹ [-180,180] or lon ⋹ [0,360]. This will ensure tat the match up.
     if maximum(lonGrid) > 180
         lonVals[lonVals .< 0] .+= 360
     end
@@ -85,12 +89,14 @@ function matchLonConventions(lonGrid::Vector{Float64}, lonVals::Vector{Float64})
 end
 
 function maskNameFromSectionName(sectionName::String)
+    # Gets the mask name from the name of the section we're using.
     maskName = "mask" * sectionName
     maskName = replace(maskName,"-" => "_")
     return maskName
 end
 
 function listSectionExpocodes(sectionName::String,convDir::String)
+    # Lists out all the expocodes of cruises occupying a given section
     expocodes = joinpath(convDir,sectionName) * ".csv"
     expocodes = CSV.read(expocodes,DataFrame)
     return expocodes
@@ -99,6 +105,7 @@ end
 
 function listAvailableGLODAPVariables(GLODAP_DIR::String,
     GLODAP_DATAFILE::String="GLODAPv2.2021_Merged_Master_File.mat")
+    # Lists all variables contained in GLODAP
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATAFILE)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -111,6 +118,8 @@ end
 function loadGLODAPVariable(GLODAP_DIR::String,GLODAP_VariableName::String
     ;GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat"
     ,GLODAP_expocode::Union{String,String15,Nothing} = nothing)
+    # Loads a single variable from GLODAP, for either a given expocode or the 
+    # entirety of the GLODAP dataset.
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -122,8 +131,7 @@ function loadGLODAPVariable(GLODAP_DIR::String,GLODAP_VariableName::String
 
     # We need to find the index where expocodes == GLODAP_Expocode, and then the
     # expocodeno of that index. We then use CRUISE == expocodeno[index]
-    if GLODAP_expocode != nothing
-        idx = first(findall(expocodes .== GLODAP_expocode))
+    if GLODAP_expocode !== nothing
         cruiseNo = convert(Int32,first(expocodeno[idx]))
         dataIdx = findall(cruise .== cruiseNo)
         variable = variable[dataIdx]
@@ -135,6 +143,8 @@ end
 function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{String}
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
     ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
+    # Loads multiple variables from GLODAP, for eiher a single cruise, or the 
+    # entire GLODAP dataset
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -148,7 +158,7 @@ function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
 
         # We need to find the index where expocodes == GLODAP_Expocode, and then the
         # expocodeno of that index. We then use CRUISE == expocodeno[index]
-        if GLODAP_expocode != nothing
+        if GLODAP_expocode !== nothing
             idx = first(findall(expocodes .== GLODAP_expocode))
             cruiseNo = convert(Int32,first(expocodeno[idx]))
             dataIdx = findall(cruise .== cruiseNo)
@@ -204,10 +214,11 @@ function loadGLODAPVariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15},Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing)
     # We can't use multiple dispatch with keyword arguments, so I'm going to put
-    # this wrapper around loadGLODAPVariables to sort the issue
+    # this wrapper around loadGLODAPVariables to sort the issue. 
 
+    # COME BACK AND FIX THIS AT SOME POINT BECAUSE ITS NOT VERY CLEAN
 
-    if GLODAP_expocodes != nothing # Structuring logic this way will load all expocodes if both  are passed
+    if GLODAP_expocodes !== nothing # Structuring logic this way will load all expocodes if both are passed
         println("GLODAP_expocodes is a vector")
         variables = loadGLODAPvariables(GLODAP_DIR,GLODAP_VariableNames
                                        ,GLODAP_expocodes,GLODAP_DATA_FILENAME)
@@ -300,8 +311,8 @@ function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #k
     varMeanGrid = fill(NaN,length(vertGrid),length(horzGrid))
     varAnom = fill(NaN,length(obsVariable))
 
-    for vertVal = 1:length(highVert)
-        @threads for horzVal = 1:length(highHorz) # Still too slow. How do we make this faster
+    for vertVal in eachindex(highVert)
+        @threads for horzVal in eachindex(highHorz) # Still too slow. How do we make this faster
                 minVertVal = lowVert[vertVal]; maxVertVal = highVert[vertVal]
                 idxVert = findall(minVertVal .< obsPres .< maxVertVal)
 
@@ -380,7 +391,7 @@ function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
 
-    if latitudes != nothing
+    if latitudes !== nothing
         meanLatitude = mean(latitudes)
         # This will overwrite meanLatitude if both are given which I think is probably
         # the optimal behaviour
@@ -423,7 +434,7 @@ function calcCorrLengths(variable::Vector{Float64}
             ,variable[goodIdx],presGrid[1:pressureStepNumber:end],searchz=rangeFactor^2*verticalSearchRange)
         catch
         end
-        lenx != nothing ? break : nothing
+        lenx !== nothing ? break : nothing
     end
 
     lenz == 10_000 ? lenz = fill(lenz, size(lenx)) : nothing
@@ -491,12 +502,12 @@ function calcDensityCorrLengths(variable::Vector{Float64}
             ,smoothz=0.1)
         catch
         end
-        if lenx != nothing
+        if lenx !== nothing
             break
         end
     end
 
-    if lenx == nothing
+    if lenx === nothing
         lenx = fill(lenxPrescribed,size(lenz))
         # Give it a prescribed horizontal correlation length
     end
@@ -543,7 +554,7 @@ function easyDIVAGrid(;variable::Vector{Float64}
     elseif meanValue == "scalar"
         varMean, varAnom = splitMeanAnom(variable)
     elseif meanValue == "climatology"
-        if bgField == nothing
+        if bgField === nothing
             error("If meanValue is specified to be \"climatology\" a background
             field must be provided")
         else
@@ -613,7 +624,7 @@ function createDensitySpaceMask(obsSigma::Vector{Float64}, obsLonLat::Vector{Flo
     stationMinSigmaIdx = fill(NaN,size(uniqueStations))
     stationMaxSigmaIdx = fill(NaN,size(uniqueStations))
 
-    for i = 1:length(uniqueStations)
+    for i in eachindex(uniqueStations)
         stationSigma = obsSigma[findall(obsLonLat .== uniqueStations[i])]
         stationSigma = filter(!isnan,stationSigma)
         try # Try/catch is to avoid max/min coming out as nan, causing issues
@@ -913,7 +924,7 @@ function gridSectionPipeline(;glodapDir::String="/Users/ct6g18/MATLAB/GLODAP"
     fieldMeanVal == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
-    if convDir == nothing
+    if convDir === nothing
         gridDir, repDir, convDir = loadGoShipDirectories(GOSHIP_DIR)
     else
         gridDir, repDir, _ = loadGoShipDirectories(GOSHIP_DIR)
@@ -1128,7 +1139,7 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
                                ,pressure::Union{Vector{Float64},Nothing} = nothing
                                ,glodapDir::String="/home/ct/MATLAB/GLODAP")
 
-    if variable == nothing
+    if variable === nothing
         vars = loadGLODAPVariables(glodapDir,[variableName,"G2station","G2pressure"]
         ,GLODAP_expocode=expocode)
         variable = vars[variableName]
@@ -1490,7 +1501,7 @@ function concatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users
     to write an exception.
     =#
 
-     if stationRanges != nothing && length(stationRanges) != length(expocodes)
+     if stationRanges !== nothing && length(stationRanges) != length(expocodes)
          error("If station ranges are specified, you must give the same number of
          station ranges and expocodes")
      end
@@ -1515,7 +1526,7 @@ function concatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users
 
         idxDict[string(expocode[2])] = dataIdx
 
-        if stationRanges != nothing
+        if stationRanges !== nothing
             stations = get_variable(GLODAP_Data,"G2station")
             cruiseStations = stations[dataIdx]
             incStn = findall(convert(Vector{Bool},sum([cruiseStations .== stnVal for stnVal in stationRanges[expocode[1]]])))
@@ -1629,18 +1640,18 @@ function createBackgroundField(;variable::String,sectionName::String
     obsLatVals = ll[!,"lat"]
 
     cLonGrid = fill(0.0,length(clim_lon),length(obsLonVals))
-    [cLonGrid[:,i] = clim_lon .- obsLonVals[i] .- lonOffset for i in 1:length(obsLonVals)]
+    [cLonGrid[:,i] = clim_lon .- obsLonVals[i] .- lonOffset for i in eachindex(obsLonVals)]
 
     k = abs.(cLonGrid)
     lonIdx = fill(0,length(obsLonVals))
     [lonIdx[i] = argmin(k[:,i]) for i in 1:length(obsLonVals)]
 
     cLatGrid = fill(0.0,length(clim_lat),length(obsLatVals))
-    [cLatGrid[:,i] = clim_lat .- obsLatVals[i] for i in 1:length(obsLatVals)]
+    [cLatGrid[:,i] = clim_lat .- obsLatVals[i] for i in eachindex(obsLatVals)]
 
     k = abs.(cLatGrid)
     latIdx = fill(0,length(obsLatVals))
-    [latIdx[i] = argmin(k[:,i]) for i in 1:length(obsLatVals)]
+    [latIdx[i] = argmin(k[:,i]) for i in eachindex(obsLatVals)]
 
 
     llG = unique!(DataFrame(lon=lonIdx,lat=latIdx)) # Find unique locations, ie. grid cells
@@ -1651,7 +1662,7 @@ function createBackgroundField(;variable::String,sectionName::String
     # Grid is on 33 levels
     bgField = convert(Matrix{Union{Float64,Missing}},fill(NaN,length(lons),33))
 
-    [bgField[i,:] = clim_var[lons[i],lats[i],:] for i in 1:length(lons)]
+    [bgField[i,:] = clim_var[lons[i],lats[i],:] for i in eachindex(lons)]
 
     #return (clim_lon[lons],clim_lat[lats],bgField)
 
@@ -1854,7 +1865,7 @@ function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #k
     varMean= fill(NaN,length(obsVariable))
     varAnom = fill(NaN,length(obsVariable))
 
-    for val = 1:length(highVert)
+    for val in eachindex(highVert)
         bgVal = bgField[val]
         minVal = lowVert[val]; maxVal = highVert[val]
         idx = findall(minVal .< obsPres .< maxVal)
