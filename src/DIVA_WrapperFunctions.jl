@@ -26,7 +26,7 @@ function loadGoShipDirectories(GOSHIP_DIR)
 
     GRID_DIR = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/gridded/" )
     REP_DIR  = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/reported/")
-    CONV_DIR = joinpath(GOSHIP_DIR , "codeConversions/SectionFiles") # Should really move this to live with GLODAP_Easy_Ocean
+    CONV_DIR = "../data/SectionExpocodes/"
 
     return GRID_DIR, REP_DIR, CONV_DIR
 end

@@ -1,0 +1,5 @@
+{
+    "GOSHIP_DIR" : "/Users/ct6g18/MATLAB/GLODAP",
+    "GLODAP_DIR" :  "/Users/ct6g18/MATLAB/GO_SHIP", 
+    "MASK_MATFILE" : "data/GO_SHIP_MaskStruct.mat",
+    }
