@@ -1773,7 +1773,7 @@ function calcGLODAP_Date(glodapYear::Vector{Float64},glodapMonth::Vector{Float64
     return glodapDate
 end
 
-function splitMeanAnom(;obsVariable::Vector{Float64},obsPres::Vector{Float64} #kwargs might not be necessary since this is at the bottom of the call stack
+function splitMeanAnom(obsVariable::Vector{Float64},obsPres::Vector{Float64} #kwargs might not be necessary since this is at the bottom of the call stack
                       ,bgField::Vector{Float64},vertGrid::Vector{Float64})
     # Remove the mean value from observations at each index of our vertical grid
     lowVert = vertGrid[1:end-1]; highVert = vertGrid[2:end]
