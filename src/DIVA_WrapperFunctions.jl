@@ -173,6 +173,7 @@ end
 function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{String}
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15}}
     ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
+    # Loads multiple variables from GLODAP, for a number of cruises
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -214,7 +215,9 @@ function loadGLODAPVariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15},Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing)
     # We can't use multiple dispatch with keyword arguments, so I'm going to put
-    # this wrapper around loadGLODAPVariables to sort the issue. 
+    # this wrapper around loadGLODAPVariables to sort the issue. This function 
+    # will allow you to load either a single or multiple variables for a single 
+    # cruise, multiple cruises, or the whole GLODAP dataset.
 
     # COME BACK AND FIX THIS AT SOME POINT BECAUSE ITS NOT VERY CLEAN
 
@@ -228,23 +231,22 @@ function loadGLODAPVariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
                                        ,GLODAP_expocode,GLODAP_DATA_FILENAME)
     end
     return variables
-
 end
 
 function centralDiff(v::AbstractVector)
+    # Very simple central difference funciton
     dvF  = diff(v)
     dvB  = reverse(-diff(reverse(v)))
     dx = Vector{AbstractFloat}(undef,length(dvF)+1)
     dx[1] = dvF[1]; dx[end] = dvB[end]
     dx[2:end-1] = (dvF[1:end-1] + dvB[2:end]) / 2
-
     return dx
 end
 
 function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
                         ,GLODAP_longitudes::Vector{Float64}
                         ,latlonGrid)
-    # Compute the distance between each station
+    # Compute the mean distance between each station in a cruise
     dLon = centralDiff(GLODAP_longitudes)
     dLat = centralDiff(GLODAP_latitudes)
 
@@ -269,7 +271,7 @@ end
 # functions without breaking them. Something to understand
 
 function createSigmaGrid(sigmaVals::Vector{Float64},numLevels::Int64=600)
-
+    # Creates a 600 level (default) evenly spaced grid in density space
     sigmaVals = unique(sort(filter(!isnan,sigmaVals)))
     sigmaStep = convert(Int64,ceil(length(sigmaVals) / numLevels))
     sigmaGrid = sigmaVals[1:sigmaStep:end]
@@ -277,7 +279,8 @@ function createSigmaGrid(sigmaVals::Vector{Float64},numLevels::Int64=600)
 end
 
 function gridSigDistance(sigmaGrid::Vector{Float64})
-
+    # Work out the characteristic mean sigma grid distance. Could probably merge
+    # this with the previous function
     sigmaMeanDist = mean(centralDiff(sigmaGrid))
     sigmaMeanDist = fill(sigmaMeanDist, size(sigmaGrid))
 
