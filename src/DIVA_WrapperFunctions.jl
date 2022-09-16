@@ -19,6 +19,14 @@ using Interpolations
 using FiniteDifferences
 using Polynomials
 using Base.Threads
+using JSON
+
+function readDefaults()
+    # This function will look at the defaults in defaults.json and save them. It
+    # will also print them unless told not to.
+    defaultsDict = JSON.parsefile("./data/defaults.json")
+    return defaultsDict
+end
 
 function loadGoShipDirectories(GOSHIP_DIR)
     # Give the paths of the GO_SHIP data and return the files we
@@ -103,9 +111,12 @@ function listSectionExpocodes(sectionName::String,convDir::String)
 end
 
 
-function listAvailableGLODAPVariables(GLODAP_DIR::String,
-    GLODAP_DATAFILE::String="GLODAPv2.2021_Merged_Master_File.mat")
+function listAvailableGLODAPVariables(GLODAP_DIR::Union{String,Nothing}=nothing,
+                                      GLODAP_DATAFILE::Union{String,Nothing}=nothing)
     # Lists all variables contained in GLODAP
+
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_DATAFILE === nothing ? GLODAP_DATAFILE = readDefaults()["GLODAP_FILENAME"] : nothing
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATAFILE)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -115,11 +126,14 @@ function listAvailableGLODAPVariables(GLODAP_DIR::String,
     end
 end
 
-function loadGLODAPVariable(GLODAP_DIR::String,GLODAP_VariableName::String
-    ;GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat"
+function loadGLODAPVariable(GLODAP_VariableName::String
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
+    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing} = nothing)
     # Loads a single variable from GLODAP, for either a given expocode or the 
     # entirety of the GLODAP dataset.
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
 
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
@@ -140,12 +154,15 @@ function loadGLODAPVariable(GLODAP_DIR::String,GLODAP_VariableName::String
 end
 
 
-function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{String}
+function loadGLODAPVariable(GLODAP_VariableName::String
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
-    ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
+    ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
     # Loads multiple variables from GLODAP, for eiher a single cruise, or the 
     # entire GLODAP dataset
 
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
     GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
 
@@ -170,12 +187,16 @@ function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
     return variables
 end
 
-function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{String}
+function loadGLODAPVariable(GLODAP_VariableNames::String
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15}}
-    ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
+    ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
     # Loads multiple variables from GLODAP, for a number of cruises
 
-    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
+
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
 
     variables = Dict{String,Vector{Float64}}()
@@ -210,8 +231,9 @@ function loadGLODAPvariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
 end
 
 
-function loadGLODAPVariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{String}
-    ;GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat"
+function loadGLODAPVariables(GLODAP_VariableNames::Vector{String}
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
+    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15},Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing)
     # We can't use multiple dispatch with keyword arguments, so I'm going to put
@@ -220,15 +242,16 @@ function loadGLODAPVariables(GLODAP_DIR::String,GLODAP_VariableNames::Vector{Str
     # cruise, multiple cruises, or the whole GLODAP dataset.
 
     # COME BACK AND FIX THIS AT SOME POINT BECAUSE ITS NOT VERY CLEAN
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
 
     if GLODAP_expocodes !== nothing # Structuring logic this way will load all expocodes if both are passed
         println("GLODAP_expocodes is a vector")
-        variables = loadGLODAPvariables(GLODAP_DIR,GLODAP_VariableNames
-                                       ,GLODAP_expocodes,GLODAP_DATA_FILENAME)
+        variables = loadGLODAPvariables(GLODAP_VariableNames,GLODAP_DIR
+                                       ,GLODAP_expocodes,GLODAP_FILENAME)
     else
         println("GLODAP_expocode is a string")
-        variables = loadGLODAPvariables(GLODAP_DIR,GLODAP_VariableNames
-                                       ,GLODAP_expocode,GLODAP_DATA_FILENAME)
+        variables = loadGLODAPvariables(GLODAP_VariableNames,GLODAP_DIR
+                                       ,GLODAP_expocode,GLODAP_FILENAME)
     end
     return variables
 end
@@ -757,8 +780,8 @@ function gridCruisePipeline(;glodapDir::String="/Users/ct6g18/MATLAB/GLODAP"
     println(isAnException)
 
     if !isAnException
-        variable = loadGLODAPVariable(glodapDir,variableName,GLODAP_expocode=expocode)
-        griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude","G2pressure","G2gamma","G2station"],GLODAP_expocode=expocode)
+        variable = loadGLODAPVariable(variableName,glodapDir,GLODAP_expocode=expocode)
+        griddingVars = loadGLODAPVariables(["G2longitude","G2latitude","G2pressure","G2gamma","G2station"],glodapDir,GLODAP_expocode=expocode)
 
         varNeedsFlags = hasDataFlags(variableName)
         if varNeedsFlags == true
@@ -929,9 +952,9 @@ function gridSectionPipeline(;glodapDir::String="/Users/ct6g18/MATLAB/GLODAP"
         isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName,maskMatfile=maskMatFile)
 
         if !isAnException
-            variable = loadGLODAPVariable(glodapDir,variableName,GLODAP_expocode=expocode[2])
-            griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude","G2pressure"
-            ,"G2gamma","G2station"],GLODAP_expocode=expocode[2])
+            variable = loadGLODAPVariable(variableName,glodapDir,GLODAP_expocode=expocode[2])
+            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude","G2pressure"
+            ,"G2gamma","G2station"],glodapDir,GLODAP_expocode=expocode[2])
 
             varNeedsFlags = hasDataFlags(variableName)
             if varNeedsFlags == true
@@ -1051,7 +1074,6 @@ function loadExceptionData(;expocode::Union{String,String15},variableName::Strin
     exceptionDir, _  = splitdir(maskMatfile)
     exceptionData = joinpath(exceptionDir,"Exceptions/ExceptionData",expocode*".mat")
     SectionFile = MatFile(exceptionData)
-    exceptionDataVariables = variable_names(SectionFile)
 
     variable = get_variable(SectionFile,variableName)
 
@@ -1109,8 +1131,8 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
     # Check if there are exception data for the variable and cruise we are looking 
     # at
     if variable === nothing
-        vars = loadGLODAPVariables(glodapDir,[variableName,"G2station","G2pressure"]
-        ,GLODAP_expocode=expocode)
+        vars = loadGLODAPVariables([variableName,"G2station","G2pressure"]
+        ,glodapDir,GLODAP_expocode=expocode)
         variable = vars[variableName]
         station = vars["G2station"]
         pressure = vars["G2pressure"]
@@ -1319,7 +1341,7 @@ function maskPartialSectionPipeline(;glodapDir::String="/home/ct/MATLAB/GLODAP"
         isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName,maskMatfile=maskMatFile)
 
         if !isAnException
-            griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude"],GLODAP_expocode=expocode[2])
+            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],glodapDir,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]
@@ -1382,7 +1404,7 @@ function checkSectionPartialCruises(;glodapDir::String="/home/ct/MATLAB/GLODAP"
         isAnException = testExpocodeException(expocode=expocode[2],variableName="G2longitude"
                                              ,maskMatfile=maskMatFile)
         if !isAnException
-            griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude"],GLODAP_expocode=expocode[2])
+            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],glodapDir,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]
@@ -1537,9 +1559,9 @@ function createBackgroundField(;variable::String,sectionName::String
     _, _, convDir = loadGoShipDirectories(GOSHIP_DIR)
     expocodes = listSectionExpocodes(sectionName,convDir)[:,"GLODAP Expocode"]
 
-    vars = loadGLODAPVariables(GLODAP_DIR,["G2theta","G2tco2","G2salinity"
+    vars = loadGLODAPVariables(["G2theta","G2tco2","G2salinity"
     ,"G2gamma","G2latitude","G2longitude","G2pressure"]
-    ,GLODAP_expocodes=expocodes)
+    ,GLODAP_DIR,GLODAP_expocodes=expocodes)
 
 
 
