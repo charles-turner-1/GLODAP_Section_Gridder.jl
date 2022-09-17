@@ -5,9 +5,10 @@ function readDefaults()
     return defaultsDict
 end
 
-function listAvailableMasks(Mask_MatFile::String)
+function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     # Reads the section mask file and returns the available masks.
-    SectionMaskFile = MatFile(Mask_MatFile)
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    SectionMaskFile = MatFile(MASK_MATFILE)
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     println("\nAvailable WOCE Section Masks:")
     for key in maskDict

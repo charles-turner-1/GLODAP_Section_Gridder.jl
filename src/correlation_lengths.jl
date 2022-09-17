@@ -37,7 +37,7 @@ function calcCorrLengths(variable::Vector{Float64}
     if obsLon == variable || obsLat == variable
         lenz = 10_000
     else
-        lenz, infoz = fitvertlen((obsLon[goodIdx],obsLat[goodIdx],obsPres[goodIdx])
+        lenz, _ = fitvertlen((obsLon[goodIdx],obsLat[goodIdx],obsPres[goodIdx])
         ,variable[goodIdx],presGrid[1:pressureStepNumber:end],searchz=verticalSearchRange)
     end
 
@@ -45,7 +45,7 @@ function calcCorrLengths(variable::Vector{Float64}
     for rangeFactor = 1:10
         printstyled("Trying to fit horizontal correlation length: attempt "* string(rangeFactor) * "\n",color=:yellow)
         try
-            lenx, dbinfo = fithorzlen((obsLon[goodIdx],obsLat[goodIdx],obsPres[goodIdx])
+            lenx, _ = fithorzlen((obsLon[goodIdx],obsLat[goodIdx],obsPres[goodIdx])
             ,variable[goodIdx],presGrid[1:pressureStepNumber:end],searchz=rangeFactor^2*verticalSearchRange)
         catch
         end
@@ -104,7 +104,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
                                 ,verticalSearchRange::Float64=0.0001)
     # Calculate correlation lengths in density space.
     goodIdx = findNonNaNIndices(variable,obsSigma)
-    lenz, infoz = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
+    lenz, _ = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
     ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=verticalSearchRange
     ,smoothz=0.1)
 
@@ -113,7 +113,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
     for rangeFactor = 1:10
         printstyled("Trying to fit horizontal correlation length in density space: attempt "* string(rangeFactor) * "\n",color=:yellow)
         try
-            lenx, dbinfo = fithorzlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
+            lenx, _ = fithorzlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
             ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=0.1*rangeFactor
             ,smoothz=0.1)
         catch

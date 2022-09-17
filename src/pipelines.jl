@@ -38,7 +38,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         bestFactorε = 1
     end
 
-    gridDir, repDir, convDir = loadGoShipDirectories(GOSHIP_DIR)
+    gridDir, _, _ = loadGoShipDirectories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
 
     isAnException = testExpocodeException(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
@@ -111,8 +111,6 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
 
     len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
     ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
-
-    P_grid,L_grid = ndgrid(prGrid,llGrid)
 
     if gridding == "isobaric"
         if crossValidate
@@ -278,8 +276,6 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
 
         len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
         ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
-
-        P_grid,L_grid = ndgrid(prGrid,llGrid)
 
         if gridding == "isobaric"
             griddedVarEasyPipeline = easyDIVAGrid(variable=variable,vertVar=pressure,latLon=XDIR

@@ -1,6 +1,7 @@
-function loadGoShipDirectories(GOSHIP_DIR)
+function loadGoShipDirectories(GOSHIP_DIR::Union{String,Nothing}=nothing)
     # Give the paths of the GO_SHIP data and return the files we
     # need to load
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
 
     GRID_DIR = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/gridded/" )
     REP_DIR  = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/reported/")
