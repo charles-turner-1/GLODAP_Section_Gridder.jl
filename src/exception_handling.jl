@@ -146,12 +146,10 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
 end
 
 function checkHorzLenFactor(;expocode::Union{String,String15},variableName::String
-                               ,maskMatfile::String, griddingType::String
-                               ,GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP")
+                            ,griddingType::String)
     # Check whether we have a manual horizonal correlation length exception. If 
     # so, apply it in the calculations.
-    exceptionDir, _  = splitdir(maskMatfile)
-    variableExceptionData = joinpath(exceptionDir,"Exceptions/horzLenExceptions.csv")
+    variableExceptionData = "../data/Exceptions/horzLenExceptions.csv"
 
     exceptionDataFrame = CSV.read(variableExceptionData,DataFrame)
     EDFsubset = exceptionDataFrame[(exceptionDataFrame.Expocode .== expocode) .&

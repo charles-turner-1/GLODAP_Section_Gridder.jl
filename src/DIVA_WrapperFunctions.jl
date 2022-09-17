@@ -5,17 +5,6 @@ defined in the GO-SHIP Easy Ocean toolbox. As such, this file itself is going to
 be just a bunch of functions which can be called when you know what variables
 you want to interpolate from what sections.    =#
 
-using MATLAB
-using DIVAnd
-using CSV
-using DelimitedFiles
-using NCDatasets
-using DataFrames
-using Interpolations
-using Base.Threads
-using TOML
-using Plots
-
 
 function easyDIVAGrid(;variable::Vector{Float64}
                       ,vertVar::Vector{Float64}

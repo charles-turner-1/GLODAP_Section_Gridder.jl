@@ -107,8 +107,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
 
     lenxFactor = checkHorzLenFactor(expocode=expocode,variableName=variableName
-                               ,maskMatfile=MASK_MATFILE, griddingType=gridding
-                               ,GLODAP_DIR=GLODAP_DIR)
+                                   ,griddingType=gridding)
 
     len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
     ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
@@ -132,10 +131,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         ,horzCoordinate=horzCoordinate,meanValue=meanValue,bgField=bgField)
     elseif gridding == "isopycnic"
         lenxPrescribed = checkHorzLenFactor(expocode=expocode
-                                                 ,variableName=variableName
-                                                 ,maskMatfile=MASK_MATFILE
-                                                 ,griddingType=gridding
-                                                 ,GLODAP_DIR=GLODAP_DIR)
+                                           ,variableName=variableName
+                                           ,griddingType=gridding)
 
         griddedVarEasyPipeline = easyDIVAisopycnal(obsVariable=variable,
         obsSigma=sigma,obsPressure=pressure,obsLat=lat,obsLon=lon,latLon=XDIR
@@ -277,8 +274,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
 
         lenxFactor = checkHorzLenFactor(expocode=expocode[2],variableName=variableName
-                                          ,maskMatfile=MASK_MATFILE, griddingType=gridding
-                                          ,GLODAP_DIR=GLODAP_DIR)
+                                       ,griddingType=gridding)
 
         len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
         ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
