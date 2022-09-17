@@ -11,12 +11,10 @@ using CSV
 using DelimitedFiles
 using NCDatasets
 using DataFrames
-using Statistics
 using Interpolations
-using FiniteDifferences
-using Polynomials
 using Base.Threads
 using TOML
+using Plots
 
 function readDefaults()
     # This function will look at the defaults in defaults.json and save them. It
