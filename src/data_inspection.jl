@@ -2,13 +2,14 @@ function readDefaults()
     # This function will look at the defaults in defaults.toml and save them. It
     # will also print them unless told not to.
     defaultsDict = TOML.parsefile("./defaults.toml")
+    defaultsDict["MASK_MATFILE"] = joinpath(root,defaultsDict["MASK_MATFILE"])
     return defaultsDict
 end
 
 function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     # Reads the section mask file and returns the available masks.
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
-    SectionMaskFile = MatFile(MASK_MATFILE)
+    SectionMaskFile = MatFile(MASK_MATFILE) 
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     println("\nAvailable WOCE Section Masks:")
     for key in maskDict
@@ -16,9 +17,9 @@ function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     end
 end
 
-function listSectionExpocodes(sectionName::String,convDir::String)
+function listSectionExpocodes(sectionName::String)
     # Lists out all the expocodes of cruises occupying a given section
-    expocodes = joinpath(convDir,sectionName) * ".csv"
+    expocodes = joinpath(root,"data/SectionExpocodes",sectionName) * ".csv"
     expocodes = CSV.read(expocodes,DataFrame)
     return expocodes
 end
