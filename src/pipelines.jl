@@ -153,7 +153,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
                             ,MASK_MATFILE::String="/Users/ct6g18/Julia/ExcessHeat/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
                             ,sectionName::String
                             ,horzCoordinate::String
-                            ,convDir::Union{Nothing,String}=nothing
+                            ,expocodeDir::Union{Nothing,String}=nothing
                             ,gridding::String="isobaric"
                             ,fieldMeanVal::String="scalar"
                             ,epsilonVal::Float64=0.01
@@ -176,15 +176,15 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
     fieldMeanVal == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
-    if convDir === nothing
-        gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
+    if expocodeDir === nothing
+        gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
     else
         gridDir, repDir, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     end
 
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
 
-    expocodeInfo = listSectionExpocodes(sectionName,convDir)
+    expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
 
     outputArray = fill(NaN,size(sectionMask,1),size(sectionMask,2),length(expocodes))

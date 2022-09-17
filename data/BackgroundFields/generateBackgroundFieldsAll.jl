@@ -5,7 +5,7 @@ const GLODAP_DIR = "/home/ct/MATLAB/GLODAP"
 const GOSHIP_DIR = "/home/ct/MATLAB/GO_SHIP"
 const MASK_MATFILE = "/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
 
-const gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
+const gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
 ##
 
 variablesToGrid = ["G2theta","G2salinity","G2tco2"]
@@ -34,7 +34,7 @@ for sectionName in enumerate(reverse(sectionNames)), variable in variablesToGrid
      "_" * variable * ".nc"
      isfile(fileStr) ? continue : nothing
 
-    numSectionExpocodes = size(listSectionExpocodes(secName,convDir))[1]
+    numSectionExpocodes = size(listSectionExpocodes(secName,expocodeDir))[1]
 
     numSectionExpocodes > 0 ? nothing : continue
 

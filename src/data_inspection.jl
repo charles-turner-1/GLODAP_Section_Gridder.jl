@@ -17,10 +17,15 @@ function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     end
 end
 
-function listSectionExpocodes(sectionName::String)
+function listSectionExpocodes(sectionName::String
+                             ,expocodeDir::Union{String,Nothing}=nothing)
     # Lists out all the expocodes of cruises occupying a given section
-    expocodes = joinpath(root,"data/SectionExpocodes",sectionName) * ".csv"
-    expocodes = CSV.read(expocodes,DataFrame)
+    if expocodeDir === nothing
+        expocodes = joinpath(root,"data/SectionExpocodes",sectionName) * ".csv"
+    else # Allow manual specification of expocodeDir so user can specify something weird if they want
+        expocodes = joinpath(expocodeDir,sectionName) * ".csv"
+    end
+        expocodes = CSV.read(expocodes,DataFrame)
     return expocodes
 end
 

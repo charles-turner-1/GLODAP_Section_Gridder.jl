@@ -75,10 +75,10 @@ function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
 
-    gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
+    gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
 
-    expocodeInfo = listSectionExpocodes(sectionName,convDir)
+    expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
 
     outputArray = fill(NaN,size(sectionMask,1),size(sectionMask,2),length(expocodes))
@@ -137,10 +137,10 @@ function checkSectionPartialCruises(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
 
-    gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
+    gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
 
-    expocodeInfo = listSectionExpocodes(sectionName,convDir)
+    expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
 
 
