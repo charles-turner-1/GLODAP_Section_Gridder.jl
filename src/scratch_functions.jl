@@ -53,7 +53,7 @@ function checkPartialCruise(;glodapDir::String="/home/ct/MATLAB/GLODAP"
     isAnException = testExpocodeException(expocode=expocode,variableName="G2longitude",maskMatfile=maskMatFile)
 
     gridDir, repDir, expocodeDir = load_GOSHIP_Directories(goshipDir)
-    horzGrid, prGrid, sectionMask = loadSectionInfo(maskMatFile,sectionName,gridDir)
+    horzGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
     griddingVars = loadGLODAPVariables(glodapDir,["G2longitude","G2latitude"],GLODAP_expocode=expocode)
 
     if !isAnException

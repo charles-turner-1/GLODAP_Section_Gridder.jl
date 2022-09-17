@@ -10,10 +10,13 @@ function load_GOSHIP_Directories(GOSHIP_DIR::Union{String,Nothing}=nothing)
     return GRID_DIR, REP_DIR, CONV_DIR
 end
 
-function loadSectionInfo(Mask_MatFile::String, sectionName::String,
-    Grid_Directory::String = "go_ship_clean_ctd/gridded/")
+function loadSectionInfo(sectionName::String
+                        ,MASK_MATFILE::Union{String,Nothing}=nothing
+                        ,Grid_Directory::String = "go_ship_clean_ctd/gridded/")
     # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
-    SectionMaskFile = MatFile(Mask_MatFile)
+
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    SectionMaskFile = MatFile(MASK_MATFILE)
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     sectionMaskName = maskNameFromSectionName(sectionName)
     mask = maskDict[sectionMaskName]

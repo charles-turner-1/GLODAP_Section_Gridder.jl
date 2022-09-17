@@ -25,7 +25,7 @@ horzCoordinates = elements[2][startVal:end]
 for sectionName in enumerate(reverse(sectionNames)), variable in variablesToGrid
     secName = String(sectionName[2])
     horzCoordinate = String(horzCoordinates[sectionName[1]])
-    llGrid, prGrid, _ = loadSectionInfo(MASK_MATFILE,secName,gridDir)
+    llGrid, prGrid, _ = loadSectionInfo(secName,MASK_MATFILE,gridDir)
 
     titleStr = "Background field: " * variable * ", " * secName
 

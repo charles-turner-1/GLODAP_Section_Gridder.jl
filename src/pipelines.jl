@@ -39,7 +39,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     end
 
     gridDir, _, _ = load_GOSHIP_Directories(GOSHIP_DIR)
-    llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
 
     isAnException = testExpocodeException(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
     println(isAnException)
@@ -182,7 +182,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         gridDir, repDir, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     end
 
-    llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
 
     expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
@@ -254,7 +254,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         end
 
         if autoTruncateMask
-            _, _, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
+            _, _, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
             # Need to overwrite sectionMask on each iteration or we will have problems
             isPartialCruise = checkPartialCruise(llGrid
                                                   ;horzCoordinate=horzCoordinate
