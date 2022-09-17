@@ -28,7 +28,7 @@ function createBackgroundField(;variable::String,sectionName::String
     clim_dep = climatology["Depth"][:]
 
     llGrid, prGrid, mask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
-    _, _, convDir = loadGoShipDirectories(GOSHIP_DIR)
+    _, _, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
     expocodes = listSectionExpocodes(sectionName,convDir)[:,"GLODAP Expocode"]
 
     vars = loadGLODAPVariables(["G2theta","G2tco2","G2salinity"

@@ -38,7 +38,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         bestFactorε = 1
     end
 
-    gridDir, _, _ = loadGoShipDirectories(GOSHIP_DIR)
+    gridDir, _, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)
 
     isAnException = testExpocodeException(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
@@ -177,9 +177,9 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
     if convDir === nothing
-        gridDir, repDir, convDir = loadGoShipDirectories(GOSHIP_DIR)
+        gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
     else
-        gridDir, repDir, _ = loadGoShipDirectories(GOSHIP_DIR)
+        gridDir, repDir, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     end
 
     llGrid, prGrid, sectionMask = loadSectionInfo(MASK_MATFILE,sectionName,gridDir)

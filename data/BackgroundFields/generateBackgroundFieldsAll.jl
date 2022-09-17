@@ -5,7 +5,7 @@ const GLODAP_DIR = "/home/ct/MATLAB/GLODAP"
 const GOSHIP_DIR = "/home/ct/MATLAB/GO_SHIP"
 const MASK_MATFILE = "/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
 
-const gridDir, repDir, convDir = loadGoShipDirectories(GOSHIP_DIR)
+const gridDir, repDir, convDir = load_GOSHIP_Directories(GOSHIP_DIR)
 ##
 
 variablesToGrid = ["G2theta","G2salinity","G2tco2"]
