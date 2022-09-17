@@ -5,7 +5,7 @@ function loadGoShipDirectories(GOSHIP_DIR::Union{String,Nothing}=nothing)
 
     GRID_DIR = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/gridded/" )
     REP_DIR  = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/reported/")
-    CONV_DIR = "../data/SectionExpocodes/"
+    CONV_DIR = joinpath(root,"data/SectionExpocodes/")
 
     return GRID_DIR, REP_DIR, CONV_DIR
 end
