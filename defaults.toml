@@ -9,5 +9,5 @@
 
 GOSHIP_DIR = "/Users/ct6g18/MATLAB/GO_SHIP"
 GLODAP_DIR =  "/Users/ct6g18/MATLAB/GLODAP" 
-MASK_MATFILE = "../data/GO_SHIP_MaskStruct.mat"
+MASK_MATFILE = "data/GOSHIP_MaskStruct.mat"
 GLODAP_FILENAME = "GLODAPv2.2021_Merged_Master_File.mat"
