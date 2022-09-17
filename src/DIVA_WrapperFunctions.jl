@@ -5,9 +5,6 @@ defined in the GO-SHIP Easy Ocean toolbox. As such, this file itself is going to
 be just a bunch of functions which can be called when you know what variables
 you want to interpolate from what sections.    =#
 
-# For now, lets just focus on obtaining a single occupation. Then we can add in
-# some of that handy optional typing in order to obtain a series more easily
-
 using MATLAB
 using DIVAnd
 using CSV
