@@ -1,0 +1,13 @@
+# Defaults
+
+# This is where the defaults for the GLODAP_Section_Gridder toolbox live. In order
+# to use the toolbox, you will need to tell the toolbox where you have installed 
+# the GO-SHIP Easy Ocean toolbox (https://github.com/kkats/GO-SHIP-Easy-Ocean) has
+# been installed, where you have installed the GLODAP dataset, which GLODAP 
+# dataset you are using, and where you have stored the stucture of masks obtained
+# from the GO-SHIP Easy Ocean toolbox.
+
+GOSHIP_DIR = "/Users/ct6g18/MATLAB/GO_SHIP"
+GLODAP_DIR =  "/Users/ct6g18/MATLAB/GLODAP" 
+MASK_MATFILE = "data/GO_SHIP_MaskStruct.mat"
+GLODAP_FILENAME = "GLODAPv2.2021_Merged_Master_File.mat"

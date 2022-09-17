@@ -19,12 +19,12 @@ using Interpolations
 using FiniteDifferences
 using Polynomials
 using Base.Threads
-using JSON
+using TOML
 
 function readDefaults()
     # This function will look at the defaults in defaults.json and save them. It
     # will also print them unless told not to.
-    defaultsDict = JSON.parsefile("./data/defaults.json")
+    defaultsDict = TOML.parsefile("./defaults.toml")
     return defaultsDict
 end
 
@@ -154,7 +154,7 @@ function loadGLODAPVariable(GLODAP_VariableName::String
 end
 
 
-function loadGLODAPVariable(GLODAP_VariableName::String
+function loadGLODAPVariables(GLODAP_VariableNames::String
     ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
     ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
@@ -188,8 +188,8 @@ function loadGLODAPVariable(GLODAP_VariableName::String
 end
 
 function loadGLODAPVariable(GLODAP_VariableNames::String
-    ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15}}
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
     # Loads multiple variables from GLODAP, for a number of cruises
 
