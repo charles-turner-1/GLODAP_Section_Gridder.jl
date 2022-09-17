@@ -235,3 +235,28 @@ function findGLODAPtco2Adjustment(GLODAP_DIR::String;
     end
     return adjustment
 end
+
+function expocodeFromG2cruise(;GLODAP_DIR::Union{String,Nothing}=nothing
+    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
+    ,G2cruise::Union{Float64,Vector{Float64}})
+    # Get an expocode back from a value of G2cruise
+
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
+
+    if length(G2cruise) > 1
+        G2cruise = G2cruise[1]
+    end
+
+    GLODAP_DATAFILE = joinpath(GLODAPdir,GLODAPdataFilename)
+    GLODAP_Data = MatFile(GLODAP_DATAFILE)
+
+    expocodes = get_variable(GLODAP_Data,"expocode")
+    expocodeno = get_variable(GLODAP_Data,"expocodeno")
+
+    expocodeIdx = findall(expocodeno .== G2cruise)
+
+    expocode = expocodes[expocodeIdx]
+    return expocode[1]
+
+end
