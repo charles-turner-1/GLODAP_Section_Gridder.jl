@@ -1,6 +1,7 @@
 function testExpocodeException(;expocode::Union{String,String15}
                                ,variableName::String
-                               ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing)
+                               ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing
+                               ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing)
     # Take an expocode, check whether that expocode is one of our exceptions.
     # If it is, then check the variable we are after is in the list of variables
     # contained in the exception data.
@@ -8,14 +9,17 @@ function testExpocodeException(;expocode::Union{String,String15}
     EXCEPTIONS_FILENAME  === nothing ? 
     EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
 
-    expocodes = joinpath("Exceptions",EXCEPTIONS_FILENAME)
+    EXCEPTIONS_DIR  === nothing ? 
+    EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
+
+    expocodes = joinpath(root,EXCEPTIONS_DIR,EXCEPTIONS_FILENAME)
     expocodeList = Vector{String}(readdlm(expocodes,',',String;header=false)[2:end,2])
 
     expocode in expocodeList ? isException = true : isException = false
 
     if isException == true # Now open the .mat file associated with our expocode
         # see if we can find the variable we're after
-        exceptionData = joinpath(exceptionDir,"Exceptions/ExceptionData",expocode*".mat")
+        exceptionData = joinpath(EXCEPTIONS_DIR,"ExceptionData",expocode*".mat")
         SectionFile = MatFile(exceptionData)
         exceptionDataVariables = variable_names(SectionFile)
 
@@ -31,7 +35,7 @@ function loadExceptionData(;expocode::Union{String,String15}
     # Load exception data from one of our exception datafiles
 
     EXCEPTIONS_DIR === nothing ?
-    exceptionData = joinpath(readBackgroundField()["EXCEPTIONS_DIR"],"ExceptionData",expocode*".mat") :
+    exceptionData = joinpath(readDefaults()["EXCEPTIONS_DIR"],"ExceptionData",expocode*".mat") :
     exceptionData = joinpath(EXCEPTIONS_DIR,"data","Exceptions")
 
     SectionFile = MatFile(exceptionData)
@@ -94,12 +98,19 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
                                ,variable::Union{Vector{Float64},Nothing} = nothing
                                ,station::Union{Vector{Float64},Nothing} = nothing
                                ,pressure::Union{Vector{Float64},Nothing} = nothing
-                               ,GLODAP_DIR::Union{String,Nothing} = nothing)
+                               ,GLODAP_DIR::Union{String,Nothing} = nothing
+                               ,EXCEPTIONS_FILENAME::Union{String,Nothing} = nothing
+                               ,EXCEPTIONS_DIR::Union{String,Nothing} = nothing)
     # Check if there are exception data for the variable and cruise we are looking 
     # at
-    GLODAP_DIR === nothing ?  GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
 
+    # This funtion might want renaming since it's actually returning the data
+    # points which I haven't manually excluded
+    
+    
     if variable === nothing
+        GLODAP_DIR === nothing ?  GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+
         vars = loadGLODAPVariables([variableName,"G2station","G2pressure"]
         ,GLODAP_DIR,GLODAP_expocode=expocode)
         variable = vars[variableName]
@@ -111,9 +122,9 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
     EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
 
     EXCEPTIONS_FILENAME === nothing ? 
-    EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+    EXCEPTIONS_FILENAME = readDefaults()["VARIABLE_EXCEPTIONS"] : nothing
 
-    variableExceptionData = joinpath(exceptionDir,EXCEPTIONS_FILENAME)
+    variableExceptionData = joinpath(EXCEPTIONS_DIR,EXCEPTIONS_FILENAME)
 
     expocodeList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,1])
     variableList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,2])
