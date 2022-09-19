@@ -15,9 +15,9 @@ using Base.Threads
 using TOML
 using Plots
 # Write your package code here.
-include("data_inspection.jl") # Checkec
-include("data_loading.jl") # Checkec
-include("simple_functionality.jl")
+include("data_inspection.jl") # Checked
+include("data_loading.jl") # Checked
+include("simple_functionality.jl") # Checked
 include("exception_handling.jl")
 include("partial_cruises.jl")
 include("distances_scales.jl")

@@ -1,18 +1,17 @@
-function testExpocodeException(;expocode::Union{String,String15},variableName::String
-                               ,maskMatfile::String)
+function testExpocodeException(;expocode::Union{String,String15}
+                               ,variableName::String
+                               ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing)
     # Take an expocode, check whether that expocode is one of our exceptions.
     # If it is, then check the variable we are after is in the list of variables
     # contained in the exception data.
     # If it is, return true. If not, return false
-    exceptionDir, _  = splitdir(maskMatfile)
-    expocodes = joinpath(exceptionDir,"Exceptions/ExpocodeList.csv")
+    EXCEPTIONS_FILENAME  === nothing ? 
+    EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+
+    expocodes = joinpath("Exceptions",EXCEPTIONS_FILENAME)
     expocodeList = Vector{String}(readdlm(expocodes,',',String;header=false)[2:end,2])
 
-    if length(intersect(expocodeList,[expocode])) > 0
-        isException = true
-    else
-        isException = false
-    end
+    expocode in expocodeList ? isException = true : isException = false
 
     if isException == true # Now open the .mat file associated with our expocode
         # see if we can find the variable we're after
@@ -20,25 +19,27 @@ function testExpocodeException(;expocode::Union{String,String15},variableName::S
         SectionFile = MatFile(exceptionData)
         exceptionDataVariables = variable_names(SectionFile)
 
-        if length(intersect(exceptionDataVariables,[variableName])) < 1
-            isException = false
-        end
+        variableName ∉ exceptionDataVariables ? isException = false : nothing
     end
 
     return isException
 end
 
-function loadExceptionData(;expocode::Union{String,String15},variableName::String
-                               ,maskMatfile::String)
+function loadExceptionData(;expocode::Union{String,String15}
+                           ,variableName::String
+                           ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing)
     # Load exception data from one of our exception datafiles
-    exceptionDir, _  = splitdir(maskMatfile)
-    exceptionData = joinpath(exceptionDir,"Exceptions/ExceptionData",expocode*".mat")
-    SectionFile = MatFile(exceptionData)
 
+    EXCEPTIONS_DIR === nothing ?
+    exceptionData = joinpath(readBackgroundField()["EXCEPTIONS_DIR"],"ExceptionData",expocode*".mat") :
+    exceptionData = joinpath(EXCEPTIONS_DIR,"data","Exceptions")
+
+    SectionFile = MatFile(exceptionData)
     variable = get_variable(SectionFile,variableName)
 
     gridding_varNames = ["G2longitude","G2latitude","G2pressure","G2gamma","G2station"]
-    griddingVars= Dict{String,Vector{Float64}}()
+    griddingVars = Dict{String,Vector{Float64}}()
+    
     for variableName in gridding_varNames
         griddingVars[variableName]  = get_variable(SectionFile,variableName)
     end
@@ -47,17 +48,20 @@ function loadExceptionData(;expocode::Union{String,String15},variableName::Strin
 
 end
 
-function writeCruiseException(;outputExpocode::String,cruiseDict::Dict{String, Vector{Float64}}
-                             ,yearString::String="0000" # Can be manually fixed afterwards if needs be
-                             ,exceptionMatFileLocation::String="/Users/ct6g18/Julia/ExcessHeat/glodap_easy_ocean/Exceptions/ExceptionData"
-                             ,exceptionListCSVFile::String="/Users/ct6g18/Julia/ExcessHeat/glodap_easy_ocean/Exceptions/ExpocodeList.csv")
+function writeCruiseException(;outputExpocode::String
+                              ,cruiseDict::Dict{String, Vector{Float64}}
+                              ,yearString::String="0000" # Can be manually fixed afterwards if needs be
+                              ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing)
     #=  When we join cruises, we are going to create a matfile which contains
     every observation from each of the cruises. That way, when we test for an
     exception, no matter the choice of variable, we will load in the joined
     variables =#
 
+    EXCEPTIONS_DIR === nothing ?
+    EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
+
     outputFilename = outputExpocode * ".mat"
-    outputDatafile = joinpath(exceptionMatFileLocation,outputFilename)
+    outputDatafile = joinpath(EXCEPTIONS_DIR,outputFilename)
 
     mf = MatFile(outputDatafile,"w")
     for varName in keys(cruiseDict)
@@ -72,7 +76,7 @@ function writeCruiseException(;outputExpocode::String,cruiseDict::Dict{String, V
 
     expocodeList = Vector{String}(readdlm(exceptionListCSVFile,',';header=false)[2:end,2])
 
-    if sum(expocodeList .== outputExpocode) < 1 # If our expocode isnt found in the list of exceptions
+    if outputExpocode ∉ expocodeList
         expocodeListStr = yearString * "," * outputExpocode * "," * outputExpocode
         println("Appending \""* expocodeListStr * "\" to " * exceptionListCSVFile)
         expectionListIOStream = open(exceptionListCSVFile,"a")
@@ -80,18 +84,21 @@ function writeCruiseException(;outputExpocode::String,cruiseDict::Dict{String, V
         close(expectionListIOStream)
     end
     # May need to force a new line character to the end of the str
+    # This needs fixing because I still don't understand the best way to do this.
+    # Complicated filesystem stuff.
 
     return nothing
 end
 
 function checkVariableExceptions(;expocode::Union{String,String15},variableName::String
-                               ,maskMatfile::String
                                ,variable::Union{Vector{Float64},Nothing} = nothing
                                ,station::Union{Vector{Float64},Nothing} = nothing
                                ,pressure::Union{Vector{Float64},Nothing} = nothing
-                               ,GLODAP_DIR::String="/home/ct/MATLAB/GLODAP")
+                               ,GLODAP_DIR::Union{String,Nothing} = nothing)
     # Check if there are exception data for the variable and cruise we are looking 
     # at
+    GLODAP_DIR === nothing ?  GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+
     if variable === nothing
         vars = loadGLODAPVariables([variableName,"G2station","G2pressure"]
         ,GLODAP_DIR,GLODAP_expocode=expocode)
@@ -100,8 +107,13 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
         pressure = vars["G2pressure"]
     end
 
-    exceptionDir, _  = splitdir(maskMatfile)
-    variableExceptionData = joinpath(exceptionDir,"Exceptions/variableExceptions.csv")
+    EXCEPTIONS_DIR === nothing ?
+    EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
+
+    EXCEPTIONS_FILENAME === nothing ? 
+    EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+
+    variableExceptionData = joinpath(exceptionDir,EXCEPTIONS_FILENAME)
 
     expocodeList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,1])
     variableList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,2])
@@ -146,12 +158,14 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
 end
 
 function checkHorzLenFactor(;expocode::Union{String,String15},variableName::String
-                            ,griddingType::String)
+                            ,griddingType::String
+                            ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
     # Check whether we have a manual horizonal correlation length exception. If 
     # so, apply it in the calculations.
-    variableExceptionData = "../data/Exceptions/horzLenExceptions.csv"
+    HORZLEN_EXCEPTIONS === nothing ? 
+    HORZLEN_EXCEPTIONS = joinpath(root,readDefaults()["EXCEPTIONS_DIR"]) : nothing
 
-    exceptionDataFrame = CSV.read(variableExceptionData,DataFrame)
+    exceptionDataFrame = CSV.read(HORZLEN_EXCEPTIONS,DataFrame)
     EDFsubset = exceptionDataFrame[(exceptionDataFrame.Expocode .== expocode) .&
     (exceptionDataFrame.Variable .== variableName) .&
     (exceptionDataFrame.Gridding .== griddingType), :]
