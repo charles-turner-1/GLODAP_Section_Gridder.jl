@@ -18,7 +18,7 @@ using Plots
 include("data_inspection.jl") # Checked
 include("data_loading.jl") # Checked
 include("simple_functionality.jl") # Checked
-include("exception_handling.jl")
+include("exception_handling.jl") # Checked
 include("partial_cruises.jl")
 include("distances_scales.jl")
 include("correlation_lengths.jl")

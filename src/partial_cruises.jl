@@ -64,16 +64,26 @@ function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
 end
 
 
-function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
-                                  ,GOSHIP_DIR::String="/home/ct/MATLAB/GO_SHIP"
-                                  ,MASK_MATFILE::String="/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
-                                  ,sectionName::String
-                                  ,horzCoordinate::String
-                                  ,variable::Array{Float64})
+function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,nothing}=nothing
+                                    ,GOSHIP_DIR::Union{String,nothing}=nothing
+                                    ,MASK_MATFILE::Union{String,nothing}=nothing
+                                    ,EXCEPTIONS_DIR::Union{String,nothing}=nothing
+                                    ,EXCEPTIONS_FILENAME::Union{String,nothing}=nothing
+                                    ,sectionName::String
+                                    ,horzCoordinate::String
+                                    ,variable::Array{Float64})
     # Chain together all the functions needed to mask a partial cruise out
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
+
+
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    EXCEPTIONS_DIR === nothing ? EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
+    EXCEPTIONS_FILENAME === nothing ? EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+
 
     gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
@@ -97,14 +107,17 @@ function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
     for expocode in enumerate(expocodes)
         println("Starting on cruise " * expocode[2])
 
-        isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName,maskMatfile=MASK_MATFILE)
+        isAnException = testExpocodeException(expocode=expocode[2]
+                            ,variableName=variableName
+                            ,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME
+                            ,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
         if !isAnException
             griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]
-            ,variableName=variableName,maskMatfile=MASK_MATFILE)
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
         end
 
         lon = griddingVars["G2longitude"]
@@ -127,15 +140,19 @@ function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
     return variable
 end
 
-function checkSectionPartialCruises(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
-                                  ,GOSHIP_DIR::String="/home/ct/MATLAB/GO_SHIP"
-                                  ,MASK_MATFILE::String="/home/ct/Julia/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
-                                  ,sectionName::String
-                                  ,horzCoordinate::String)
+function checkSectionPartialCruises(;GLODAP_DIR::Union{String,Nothing}=nothing
+                                    ,GOSHIP_DIR::Union{String,Nothing}=nothing
+                                    ,MASK_MATFILE::Union{String,Nothing}=nothing
+                                    ,sectionName::String
+                                    ,horzCoordinate::String)
     # Check a section for partial cruises.
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
+
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
     gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
     llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
@@ -160,14 +177,16 @@ function checkSectionPartialCruises(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
     for expocode in enumerate(expocodes)
         println("Checking for partial occupation during cruise " * expocode[2])
 
-        isAnException = testExpocodeException(expocode=expocode[2],variableName="G2longitude"
-                                             ,maskMatfile=MASK_MATFILE)
+        isAnException = testExpocodeException(expocode=expocode[2]
+                            ,variableName="G2longitude"
+                            ,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME
+                            ,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
         if !isAnException
             griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]
-            ,variableName="G2longitude",maskMatfile=MASK_MATFILE)
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
         end
 
         lon = griddingVars["G2longitude"]
