@@ -258,11 +258,11 @@ function expocodeFromG2cruise(;GLODAP_DIR::Union{String,Nothing}=nothing
         G2cruise = G2cruise[1]
     end
 
-    GLODAP_DATAFILE = joinpath(GLODAPdir,GLODAPdataFilename)
-    GLODAP_Data = MatFile(GLODAP_DATAFILE)
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_FILENAME)
+    GLODAP_DATA = MatFile(GLODAP_DATAFILE)
 
-    expocodes = get_variable(GLODAP_Data,"expocode")
-    expocodeno = get_variable(GLODAP_Data,"expocodeno")
+    expocodes = get_variable(GLODAP_DATA,"expocode")
+    expocodeno = get_variable(GLODAP_DATA,"expocodeno")
 
     expocodeIdx = findall(expocodeno .== G2cruise)
 

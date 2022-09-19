@@ -15,15 +15,15 @@ using Base.Threads
 using TOML
 using Plots
 # Write your package code here.
-include("DIVA_WrapperFunctions.jl")
-include("pipelines.jl")
-include("data_inspection.jl")
+include("data_inspection.jl") # Checkec
+include("data_loading.jl") # Checkec
+include("simple_functionality.jl")
 include("exception_handling.jl")
-include("data_loading.jl")
 include("partial_cruises.jl")
 include("distances_scales.jl")
 include("correlation_lengths.jl")
-include("simple_functionality.jl")
+include("DIVA_WrapperFunctions.jl")
+include("pipelines.jl")
 include("background_fields.jl")
 include("output_fields.jl")
 
