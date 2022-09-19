@@ -190,3 +190,63 @@ function checkHorzLenFactor(;expocode::Union{String,String15},variableName::Stri
         return 1.0
     end
 end
+
+function cocatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
+                           ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat"
+                           ,stationRanges::Union{Vector{Vector{Int64}},Nothing}=nothing)
+    #= Take two (or more) expocodes, merge them together into a single dict which
+    will contain all the observations in each cruise, or a range of the observations
+    in each of the cruises based on station numbers. This can then be passed to
+    the writeCruiseException function to create an exception .mat file for general
+    use.
+
+    This can also be used to take a range of stations from a single cruise in order
+    to write an exception.
+    =#
+
+     if stationRanges !== nothing && length(stationRanges) != length(expocodes)
+         error("If station ranges are specified, you must give the same number of
+         station ranges and expocodes")
+     end
+
+
+
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
+    GLODAP_Data = MatFile(GLODAP_DATAFILE)
+
+
+    # Now run through each expocode and extract the indices of observations at
+    # the stations we are after.
+    idxDict = Dict{String,Vector{Int64}}()
+    for expocode in enumerate(expocodes)
+        expocodeList = get_variable(GLODAP_Data,"expocode")
+        expocodeno = get_variable(GLODAP_Data,"expocodeno")
+        cruise = get_variable(GLODAP_Data,"G2cruise")
+
+        idx = first(findall(expocodeList .== expocode[2]))
+        cruiseNo = convert(Int64,first(expocodeno[idx]))
+        dataIdx = findall(cruise .== cruiseNo)
+
+        idxDict[string(expocode[2])] = dataIdx
+
+        if stationRanges !== nothing
+            stations = get_variable(GLODAP_Data,"G2station")
+            cruiseStations = stations[dataIdx]
+            incStn = findall(convert(Vector{Bool},sum([cruiseStations .== stnVal for stnVal in stationRanges[expocode[1]]])))
+            idxDict[string(expocode[2])] = dataIdx[incStn]
+        end
+
+    end
+    goodIdx = reduce(vcat,[indices[2] for indices in idxDict])
+
+    # Create a dict containing all the glodap variables and populate the names,
+    # but initialise with empty vectors
+    variables = Dict{String,Vector{Float64}}()
+    for variableName in variable_names(GLODAP_Data)[2:end-2] #Ignore DOI, expocode, expocodeno
+        variables[variableName] = get_variable(GLODAP_Data,variableName)[goodIdx]
+    end
+
+
+    return variables
+end
+
