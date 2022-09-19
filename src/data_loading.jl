@@ -11,11 +11,15 @@ function load_GOSHIP_Directories(GOSHIP_DIR::Union{String,Nothing}=nothing)
 end
 
 function loadSectionInfo(sectionName::String
-                        ,MASK_MATFILE::Union{String,Nothing}=nothing
-                        ,Grid_Directory::String = "go_ship_clean_ctd/gridded/")
+                        ,GRID_INFO_DIR::Union{String,Nothing}=nothing
+                        ,MASK_MATFILE::Union{String,Nothing}=nothing)
     # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
+    # This needs extending so that a user can add their own section if they want
+    # one.
 
+    GRID_INFO_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+
     SectionMaskFile = MatFile(MASK_MATFILE)
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     sectionMaskName = maskNameFromSectionName(sectionName)
@@ -38,7 +42,7 @@ function loadSectionInfo(sectionName::String
         maskPath = joinpath("southern/",sectionName,matName)
     end
 
-    gridFile = MatFile(joinpath(Grid_Directory,maskPath))
+    gridFile = MatFile(joinpath(GOSHIP_DIR,"go_ship_clean_ctd/gridded/",maskPath))
     pr_grid = vec(get_variable(gridFile,"pr_grid"))
     ll_grid = vec(get_variable(gridFile,"ll_grid"))
 
@@ -49,67 +53,6 @@ function loadSectionInfo(sectionName::String
     end
 
     return ll_grid, pr_grid, mask
-end
-
-function loadGLODAPVariable(GLODAP_VariableName::String
-    ,GLODAP_DIR::Union{String,Nothing}=nothing
-    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
-    ,GLODAP_expocode::Union{String,String15,Nothing} = nothing)
-    # Loads a single variable from GLODAP, for either a given expocode or the 
-    # entirety of the GLODAP dataset.
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
-
-    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
-    GLODAP_Data = MatFile(GLODAP_DATAFILE)
-
-    variable = get_variable(GLODAP_Data,GLODAP_VariableName)
-    expocodes = get_variable(GLODAP_Data,"expocode")
-    expocodeno = get_variable(GLODAP_Data,"expocodeno")
-    cruise = get_variable(GLODAP_Data,"G2cruise")
-
-    # We need to find the index where expocodes == GLODAP_Expocode, and then the
-    # expocodeno of that index. We then use CRUISE == expocodeno[index]
-    if GLODAP_expocode !== nothing
-        cruiseNo = convert(Int32,first(expocodeno[idx]))
-        dataIdx = findall(cruise .== cruiseNo)
-        variable = variable[dataIdx]
-    end
-    return variable
-end
-
-
-function loadGLODAPVariables(GLODAP_VariableNames::String
-    ,GLODAP_DIR::Union{String,Nothing}=nothing
-    ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
-    ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
-    # Loads multiple variables from GLODAP, for eiher a single cruise, or the 
-    # entire GLODAP dataset
-
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
-    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
-    GLODAP_Data = MatFile(GLODAP_DATAFILE)
-
-    variables = Dict{String,Vector{Float64}}()
-    for variableName in GLODAP_VariableNames
-        variable = get_variable(GLODAP_Data,variableName)
-        expocodes = get_variable(GLODAP_Data,"expocode")
-        expocodeno = get_variable(GLODAP_Data,"expocodeno")
-        cruise = get_variable(GLODAP_Data,"G2cruise")
-
-        # We need to find the index where expocodes == GLODAP_Expocode, and then the
-        # expocodeno of that index. We then use CRUISE == expocodeno[index]
-        if GLODAP_expocode !== nothing
-            idx = first(findall(expocodes .== GLODAP_expocode))
-            cruiseNo = convert(Int32,first(expocodeno[idx]))
-            dataIdx = findall(cruise .== cruiseNo)
-            variable = variable[dataIdx]
-        end
-
-        variables[variableName] = variable
-    end
-    return variables
 end
 
 function loadGLODAPVariable(GLODAP_VariableNames::String
@@ -152,6 +95,68 @@ function loadGLODAPVariable(GLODAP_VariableNames::String
         variables[variableName] = get_variable(GLODAP_Data,variableName)[goodIdx]
     end
 
+    return variables
+end
+
+function loadGLODAPVariable(GLODAP_VariableName::String
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
+    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
+    ,GLODAP_expocode::Union{String,String15,Nothing} = nothing)
+    # Loads a single variable from GLODAP, for either a given expocode or the 
+    # entirety of the GLODAP dataset.
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
+
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_FILENAME)
+    GLODAP_Data = MatFile(GLODAP_DATAFILE)
+
+    variable = get_variable(GLODAP_Data,GLODAP_VariableName)
+    expocodes = get_variable(GLODAP_Data,"expocode")
+    expocodeno = get_variable(GLODAP_Data,"expocodeno")
+    cruise = get_variable(GLODAP_Data,"G2cruise")
+
+    # We need to find the index where expocodes == GLODAP_Expocode, and then the
+    # expocodeno of that index. We then use CRUISE == expocodeno[index]
+    if GLODAP_expocode !== nothing
+        idx = first(findall(expocodes .== GLODAP_expocode))
+        cruiseNo = convert(Int32,first(expocodeno[idx]))
+        dataIdx = findall(cruise .== cruiseNo)
+        variable = variable[dataIdx]
+    end
+    return variable
+end
+
+
+function loadGLODAPvariables(GLODAP_VariableNames::Vector{String}
+    ,GLODAP_DIR::Union{String,Nothing}=nothing
+    ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
+    ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
+    # Loads multiple variables from GLODAP, for eiher a single cruise, or the 
+    # entire GLODAP dataset
+
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ? GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_FILENAME)
+    GLODAP_Data = MatFile(GLODAP_DATAFILE)
+
+    variables = Dict{String,Vector{Float64}}()
+    for variableName in GLODAP_VariableNames
+        variable = get_variable(GLODAP_Data,variableName)
+        expocodes = get_variable(GLODAP_Data,"expocode")
+        expocodeno = get_variable(GLODAP_Data,"expocodeno")
+        cruise = get_variable(GLODAP_Data,"G2cruise")
+
+        # We need to find the index where expocodes == GLODAP_Expocode, and then the
+        # expocodeno of that index. We then use CRUISE == expocodeno[index]
+        if GLODAP_expocode !== nothing
+            idx = first(findall(expocodes .== GLODAP_expocode))
+            cruiseNo = convert(Int32,first(expocodeno[idx]))
+            dataIdx = findall(cruise .== cruiseNo)
+            variable = variable[dataIdx]
+        end
+
+        variables[variableName] = variable
+    end
     return variables
 end
 
@@ -207,8 +212,8 @@ function removeFlaggedData(variable::Vector{Float64}, variable_fFlag::Vector{Flo
     return outputVar
 end
 
-function findGLODAPtco2Adjustment(GLODAP_DIR::String;
-    GLODAP_AdjTable::String="AdjustmentTable.csv",expocode::Union{String,String15})
+function findGLODAPtco2Adjustment(;GLODAP_AdjTable::String="AdjustmentTable.csv"
+                                 ,expocode::Union{String,String15})
     # Adjust tCO2 using the GLODAP adjustment table
     
     # This will check whether the expocode we are looking at is in Jens Muller's 
@@ -218,10 +223,11 @@ function findGLODAPtco2Adjustment(GLODAP_DIR::String;
 
     if expocode in JensList
         println("Expocode in Jens Muller's recommended adjustment list, returning 1.7")
+        println("This is temporary behaviour until the next GLODAP update.")
         return 1.7
     end
 
-    GLODAP_AdjTable = joinpath(GLODAP_DIR,GLODAP_AdjTable)
+    GLODAP_AdjTable = joinpath(root,"data",GLODAP_AdjTable)
 
     tableCSV = CSV.read(GLODAP_AdjTable,DataFrame)
 

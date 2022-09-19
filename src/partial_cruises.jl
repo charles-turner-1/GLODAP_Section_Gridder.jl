@@ -76,7 +76,7 @@ function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
     end
 
     gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
 
     expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
@@ -111,7 +111,7 @@ function maskPartialSectionPipeline(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
         lat = griddingVars["G2latitude"]
 
 
-        _, _, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+        _, _, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
         # Need to overwrite sectionMask on each iteration or we will have problems
         isPartialCruise = checkPartialCruise(llGrid;horzCoordinate=horzCoordinate
                                             ,obsLat=lat,obsLon=lon)
@@ -138,7 +138,7 @@ function checkSectionPartialCruises(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
     end
 
     gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
 
     expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
@@ -174,7 +174,7 @@ function checkSectionPartialCruises(;GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
         lat = griddingVars["G2latitude"]
 
 
-        _, _, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+        _, _, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
         # Need to overwrite sectionMask on each iteration or we will have problems
         isPartialCruise = checkPartialCruise(llGrid;horzCoordinate=horzCoordinate
                                             ,obsLat=lat,obsLon=lon)

@@ -6,6 +6,12 @@ function readDefaults()
     return defaultsDict
 end
 
+function changeDefaults()
+    # Could also add a function which changes the defaults. Not sure if absolutely
+    # necessary.
+    return nothing
+end
+
 function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     # Reads the section mask file and returns the available masks.
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing

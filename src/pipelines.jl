@@ -26,8 +26,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     end
 
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
     meanValue == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
@@ -39,7 +39,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     end
 
     gridDir, _, _ = load_GOSHIP_Directories(GOSHIP_DIR)
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
 
     isAnException = testExpocodeException(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
     println(isAnException)
@@ -62,7 +62,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     end
 
     if variableName == "G2tco2"
-        tco2Adj = findGLODAPtco2Adjustment(GLODAP_DIR,expocode=expocode)
+        tco2Adj = findGLODAPtco2Adjustment(expocode=expocode)
         variable .+= tco2Adj
         tco2Adj == 0 ? println("No DIC adjustment necessary") : println("Adjusting DIC by " * string(tco2Adj) * "μmol/kg")
     end
@@ -182,7 +182,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         gridDir, repDir, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     end
 
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
 
     expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
@@ -224,7 +224,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
                 variable = removeFlaggedData(variable,variableFlags)
             end
             if variableName == "G2tco2"
-                tco2Adj = findGLODAPtco2Adjustment(GLODAP_DIR,expocode=expocode[2])
+                tco2Adj = findGLODAPtco2Adjustment(expocode=expocode[2])
                 tco2Adj == 0 ? println("No DIC adjustment necessary") : println("Adjusting DIC by " * string(tco2Adj) * "μmol/kg")
                 variable .+= tco2Adj
             end
@@ -254,7 +254,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         end
 
         if autoTruncateMask
-            _, _, sectionMask = loadSectionInfo(sectionName,MASK_MATFILE,gridDir)
+            _, _, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
             # Need to overwrite sectionMask on each iteration or we will have problems
             isPartialCruise = checkPartialCruise(llGrid
                                                   ;horzCoordinate=horzCoordinate
