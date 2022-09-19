@@ -19,10 +19,10 @@ include("data_inspection.jl") # Checked
 include("data_loading.jl") # Checked
 include("simple_functionality.jl") # Checked
 include("exception_handling.jl") # Checked
-include("partial_cruises.jl")
-include("distances_scales.jl")
-include("correlation_lengths.jl")
-include("DIVA_WrapperFunctions.jl")
+include("partial_cruises.jl") # Checked
+include("distances_scales.jl") # Checked, still requires some work but the repackaging is fine.
+include("correlation_lengths.jl") # Checked
+include("DIVA_WrapperFunctions.jl") # Checked
 include("pipelines.jl")
 include("background_fields.jl")
 include("output_fields.jl")

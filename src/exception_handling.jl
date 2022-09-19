@@ -191,9 +191,10 @@ function checkHorzLenFactor(;expocode::Union{String,String15},variableName::Stri
     end
 end
 
-function cocatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
-                           ,GLODAP_DATA_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat"
-                           ,stationRanges::Union{Vector{Vector{Int64}},Nothing}=nothing)
+function cocatenateCruises(expocodes::Vector{String}
+                          ;GLODAP_DIR::Union{String,Nothing}=nothing
+                          ,GLODAP_FILENAME::Union{String,Nothing}=nothing
+                          ,stationRanges::Union{Vector{Vector{Int64}},Nothing}=nothing)
     #= Take two (or more) expocodes, merge them together into a single dict which
     will contain all the observations in each cruise, or a range of the observations
     in each of the cruises based on station numbers. This can then be passed to
@@ -203,6 +204,8 @@ function cocatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users/
     This can also be used to take a range of stations from a single cruise in order
     to write an exception.
     =#
+    GLODAP_DIR === nothing ?  GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GLODAP_FILENAME === nothing ?  GLODAP_FILENAME = readDefaults()["GLODAP_FILENAME"] : nothing
 
      if stationRanges !== nothing && length(stationRanges) != length(expocodes)
          error("If station ranges are specified, you must give the same number of
@@ -211,7 +214,7 @@ function cocatenateCruises(expocodes::Vector{String};GLODAP_DIR::String="/Users/
 
 
 
-    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATA_FILENAME)
+    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_FILENAME)
     GLODAP_Data = MatFile(GLODAP_DATAFILE)
 
 

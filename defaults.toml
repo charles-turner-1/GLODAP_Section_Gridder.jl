@@ -5,7 +5,8 @@
 # the GO-SHIP Easy Ocean toolbox (https://github.com/kkats/GO-SHIP-Easy-Ocean) has
 # been installed, where you have installed the GLODAP dataset, which GLODAP 
 # dataset you are using, and where you have stored the stucture of masks obtained
-# from the GO-SHIP Easy Ocean toolbox.
+# from the GO-SHIP Easy Ocean toolbox. Additionally, you will need to tell it where
+# exceptions live, and what they are called. 
 
 GOSHIP_DIR = "/Users/ct6g18/MATLAB/GO_SHIP"
 GLODAP_DIR =  "/Users/ct6g18/MATLAB/GLODAP" 
