@@ -162,7 +162,7 @@ function gridSectionPipeline(;sectionName::String
                              ,horzCoordinate::String
                              ,gridding::String="isobaric"
                              ,fieldMeanVal::String="scalar"
-                             ,epsilonVal::Float64=0.01
+                             ,epsilonVal::Float64=0.1
                              ,autoTruncateMask::Bool=false
                              ,GLODAP_DIR::Union{String,Nothing}=nothing
                              ,GOSHIP_DIR::Union{String,Nothing}=nothing

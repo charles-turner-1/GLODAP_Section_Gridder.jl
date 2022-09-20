@@ -132,6 +132,29 @@ number should return a better final field but is more computationally expensive.
 occupations of a given section. All arguments are positional, and all but three
  are optional.
 
+##### Mandatory Arguments
+- `sectionName`: A string describing the hydrographic section of interest.
+- `horzCoordinate`: A string describing the major direction of the section.
+Currently, this must be either `longitude` or `latitude`.
+- `variableName`: A string telling the function which expocode we wish to grid.
+For example, set `variableName = "G2theta"` to grid temperature.
+
+##### Optional Arguments
+- `gridding`: A string specifying whether to use isobaric (default) or isopycnic 
+gridding. Beware, isopycnic gridding is still in testing.
+- `meanValue`: A string, specifying which mean value to use as a background. Options 
+are `scalar` (default), `horzMean` (horizontal mean value), or `climatology` 
+(climatological mean value). `climatology` is derived from the GLODAP climatology, 
+and only available for `G2theta`, `G2salinity`, and `G2tco2` (at present).
+- `epsilonVal`: A float, specifying the value Epsilon_0 (default 0.1). 
+Smaller values force the gridded fields to fit more closely to the observations
+- `autoTruncateMask`: A boolean (default false). Setting `autoTruncateMask=true`
+will automatically truncate the mask such that regions with no observations are 
+masked out. This can be useful for partial cruises.
+
+### Example usage
+
+See `examples/example_notebook.ipynb` for example usage.
 ## Installation
 
 Presently, this package can be installed by cloning this repository (`git clone https://github.com/charles-turner-1/GLODAP_Section_Gridder.jl`). It will soon
