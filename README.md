@@ -29,6 +29,50 @@ installed, as it interfaces with the MATLAB versions of the GLODAP and GO-SHIP
 Easy Ocean datasets. It will also write exception data to .mat files. (As MATLAB 
 is not open source, it is intended that this MATLAB dependency will be removed 
 eventually. However, this is not currently a priority.)
+- Default settings (data location, filenames etc.) are saved in `defaults.toml`.
+These are explained in detail below.
+- Top level functionality is called using one of two functions: `gridCruisePipeline` 
+or `gridSectionPipeline`. 
+    - `gridCruisePipeline` will grid a variable from a single cruise.
+    - `gridSectionPipeline` will grid a single variable, for all repeat occupations 
+    of a hydrographic section.
+- Gridding functionality can also be called in more granular detail, exceptions 
+or correlation lengths manually specified etc. These will be detailed at a later time.
+
+### Reading defaults and data inspection
+`src/data_inspection.jl` contains a number of functions which allows a user to 
+inspect the datasets they are using. 
+- `readDefaults()` parses the `defaults.toml` file. This allows the user to 
+manually inspect the defaults settings.
+    - `GOSHIP_DIR` specifies the directory to which the GO-SHIP Easy Ocean toolbox 
+    has been cloned to.
+    - `GLODAP_DIR` specifies the directory which the GLODAP dataset has been saved
+    in.
+    - `MASK_MATFILE` specifies the `.mat` file in which all masks being used have 
+    been saved. If a user wishes to specify their own mask, they may do so 
+    either by editing this file or by changing `MASK_MATFILE`.
+    - `GLODAP_FILENAME` specifies the name of the GLODAP dataset. This allows 
+    the user to update the GLODAP version easily.
+    - `EXCEPTIONS_DIR` contains all exception data: this is where data has been 
+    manually adjusted and the adjustment saved.
+    - `EXCEPTIONS_FILENAME` contains a list of expocodes (both used in GLODAP and 
+    GO-SHIP, see https://github.com/charles-turner-1/WOCE_GLODAP_Conversions 
+    for more details) for which exceptions have been specified.
+    - `VARIABLE_EXCEPTIONS` specifies bottle data which the user wishes to 
+    manually exclude from gridding.
+    - `HORZLEN_EXCEPTIONS` specifies data for which the user wishes to manually
+    adjust the horizontal correlation length. This is particularly useful for 
+    cruises where a number of stations lack profiles for a given variable, for 
+    example.
+    - `USERNAME`: If you wish to write a gridded to field to a netCDF file using 
+    the built in functionality, changing this will change the Author field to 
+    your name.
+    - `OUTPUTS_DIR`: If using the built in functionality to write output fields, 
+    this will set the directory to which these fields are written.
+- In nearly all use cases, defaults can be manually changed to whatever the user
+wishes in function calls. However, it is more straightforward to change them in 
+the `defaults.toml` file. A `writeDefaults()` functionality will be implemented 
+soon, however, manual adjustment of `defaults.toml` is still necessary. 
 
 ## Gridding cruises and repeat hydrographic sections
 
