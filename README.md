@@ -17,4 +17,4 @@ data from GLODAP. It glues together 3 data resourses into an easy to use package
 
     The method bears some similarities and equivalences with Optimal Interpolation or Krigging in that it allows to create a smooth and continous field from a collection of observations, observations which can be affected by errors. The analysis method is however different in practise, allowing to take into account topological features, physical constraints etc in a natural way. The method was initially developped with ocean data in mind, but it can be applied to any field where localized observations have to be used to produce gridded fields which are "smooth".
 
-*** This package acts as a wrapper, enabling easy gridding of GLODAP data onto sections provided by GO-SHIP Easy Ocean, using DIVAnd. ***
+** This package acts as a wrapper, enabling easy gridding of GLODAP data onto sections provided by GO-SHIP Easy Ocean, using DIVAnd. **
