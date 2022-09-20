@@ -101,8 +101,30 @@ this must be either `longitude` or `latitude`.
 - `expocode`: A string telling the function which cruise you wish to grid. For 
 example, to grid the 1992 occupation of A05, set `expocode="29HE19920714"`. 
 Expocodes for a section can be found using `listSectionExpocodes(sectionName)`.
+- `variableName`: A string telling the function which expocode we wish to grid.
+For example, set `variableName = "G2theta"` to grid temperature.
 
 ##### Optional Arguments
+- `gridding`: A string specifying whether to use isobaric (default) or isopycnic 
+gridding. Beware, isopycnic gridding is still in testing.
+- `meanValue`: A string, specifying which mean value to use as a background. Options 
+are `scalar` (default), `horzMean` (horizontal mean value), or `climatology` 
+(climatological mean value). `climatology` is derived from the GLODAP climatology, 
+and only available for `G2theta`, `G2salinity`, and `G2tco2` (at present).
+- `epsilonVal`: A float, specifying the value Epsilon_0 (default 0.1). 
+Smaller values force the gridded fields to fit more closely to the observations
+- `plotResults`: A boolean (default false). Settings `plotResults=true` will 
+plot out the returned field as a heatmap.
+- `autoTruncateMask`: A boolean (default false). Setting `autoTruncateMask=true`
+will automatically truncate the mask such that regions with no observations are 
+masked out. This can be useful for partial cruises.
+- `crossValidate`: A boolean (default false). Setting `crossValidate=true` will 
+enable a cross validation of the gridding to determine whether a better `epsilonVal`
+can be obtained, and auto adjust to return the field gridded with this value. This
+is computationally expensive and does not necessarily return a better field.
+- `crossValidationNum`: An integer (default 5). If `crossValidate` is set to true,
+`crossValidateNum` controls the number of cross validations performed. A larger 
+number should return a better final field but is more computationally expensive.
 
 ### gridSectionPipeline
 
