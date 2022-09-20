@@ -3,6 +3,18 @@
 This is a package which will enable you to compute gridded sections of bottle 
 data from GLODAP. It glues together 3 data resourses into an easy to use package:
 
-1. [GLODAP](https://www.glodap.info/)
-2. [GO-SHIP Easy Ocean](https://github.com/kkats/GO-SHIP-Easy-Ocean)
-3. [DIVAnd](https://github.com/gher-uliege/DIVAnd.jl)
+1. [GLODAP](https://www.glodap.info/): The Global Ocean Data Analysis Project (GLODAP) is a synthesis activity for ocean surface to bottom biogeochemical data collected through chemical analysis of water samples. Data for 13 core variables (salinity, oxygen, phosphate, nitrate, silicate, dissolved inorganic carbon, total alkalinity, pH, CFC-11, CFC-12, CFC-113, CCl4 and SF6) are subjected to primary and secondary quality control to identify outliers and correct for measurement biases.
+
+    GLODAP is publicly available, discoverable, and citable. GLODAP enables quantification of the ocean carbon sink, ocean acidification and evaluation of ocean biogeochemical models.
+
+    GLODAP was first published in 2004. The second version, GLODAPv2, was released in 2016. This forms the basis for regular updates, containing new data sets as well as updates of older ones. The first such regular update was GLODAPv2.2019.
+
+    GLODAPv2.2022 adds data from 96 cruises to the previous release and extends coverage in time until 2021. GLODAPv2.2022 contains data from almost 1.4 million water samples collected on 1085 cruises. An accompanying manuscript has been submitted for consideration for publication in Earth System Science Data.
+2. [GO-SHIP Easy Ocean](https://github.com/kkats/GO-SHIP-Easy-Ocean):
+    Despite technological advances over the last several decades, ship-based hydrography remains the only method for obtaining high-quality, high spatial and vertical resolution measurements of physical, chemical, and biological parameters over the full water column essential for physical, chemical, and biological oceanography and climate science. The Global Ocean Ship-based Hydrographic Investigations Program (GO-SHIP) coordinates a network of globally sustained hydrographic sections. These data provide a unique data set that spans four decades, comprised of more than 40 cross-ocean transects. The section data are, however, difficult to use owing to inhomogeneous format. The purpose of this new temperature, salinity, and dissolved oxygen data product is to combine, reformat and grid these data measured by Conductivity-Temperature-Depth-Oxygen (CTDO) profilers in order to facilitate their use by a wider audience. The product is machine readable and readily accessible by many existing visualisation and analysis software packages. The data processing can be repeated with modifications to suit various applications such as analysis of deep ocean, validation of numerical simulation, and calibration of autonomous platforms.
+    
+ 3. [DIVAnd](https://github.com/gher-uliege/DIVAnd.jl): DIVAnd (Data-Interpolating Variational Analysis in n dimensions) performs an n-dimensional variational analysis/gridding of arbitrarily located observations. Observations will be interpolated/analyzed on a curvilinear grid in 1, 2, 3 or more dimensions. In this sense it is a generalization of the original two-dimensional DIVA version (still available here https://github.com/gher-ulg/DIVA but not further developed anymore).
+
+    The method bears some similarities and equivalences with Optimal Interpolation or Krigging in that it allows to create a smooth and continous field from a collection of observations, observations which can be affected by errors. The analysis method is however different in practise, allowing to take into account topological features, physical constraints etc in a natural way. The method was initially developped with ocean data in mind, but it can be applied to any field where localized observations have to be used to produce gridded fields which are "smooth".
+
+*** This package acts as a wrapper, enabling easy gridding of GLODAP data onto sections provided by GO-SHIP Easy Ocean, using DIVAnd. ***
