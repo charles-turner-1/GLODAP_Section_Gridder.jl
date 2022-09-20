@@ -16,3 +16,8 @@ EXCEPTIONS_DIR = "data/Exceptions"
 EXCEPTIONS_FILENAME = "ExpocodeList.csv"
 VARIABLE_EXCEPTIONS = "variableExceptions.csv"
 HORZLEN_EXCEPTIONS = "horzLenExceptions.csv"
+
+# These settings will be used for saving off user gridded fields.
+
+USERNAME = "Charles Turner"
+OUTPUTS_DIR = "/Users/ct6g18/Julia/GriddedSections"

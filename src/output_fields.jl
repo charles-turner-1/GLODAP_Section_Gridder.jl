@@ -1,11 +1,13 @@
 function writeOutputField(;variable::Array{Float64,3},sectionName::String
-                         ,variableName::String
-                         ,GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
-                         ,horzCoordinate::String
-                         ,outputPath::String="/home/ct/Julia/RawOutputFields"
-                         ,GLODAP_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
+                          ,variableName::String
+                          ,horzCoordinate::String
+                          ,userName::Union{String,Nothing}=nothing
+                          ,outputPath::Union{String,Nothing}=nothing)
     # This function takes an output field and writes it to disk. It is based on
     # the background field functionality
+
+    userName === nothing ? userName = readDefaults()["USERNAME"] : nothing
+    outputPath === nothing ? outputPath = readDefaults()["OUTPUTS_DIR"] : nothing
 
     fileName = sectionName * "_" * variableName * ".nc"
 
@@ -29,7 +31,7 @@ function writeOutputField(;variable::Array{Float64,3},sectionName::String
     v1[:,:,:] = variable
 
     ds.attrib["Comments"] = "Generated using the GLODAP dataset and gridding data from GO-SHIP Easy Ocean"
-    ds.attrib["Creator"] = "Charles Turner"
+    ds.attrib["Creator"] = userName
 
     close(ds)
 
@@ -38,13 +40,15 @@ function writeOutputField(;variable::Array{Float64,3},sectionName::String
 end
 
 function writeOutputFields(;variables::Vector{Array{Float64,3}},sectionName::String
-                         ,variableNames::Vector{String}
-                         ,GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
-                         ,horzCoordinate::String
-                         ,outputPath::String="/home/ct/Julia/RawOutputFields"
-                         ,GLODAP_FILENAME::String="GLODAPv2.2021_Merged_Master_File.mat")
-    # This function takes an output field and writes it to disk. It is based on
-    # the background field functionality
+                           ,variableNames::Vector{String}
+                           ,horzCoordinate::String
+                           ,userName::Union{String,Nothing}=nothing
+                           ,outputPath::Union{String,Nothing}=nothing)
+    # This function takes several output fields and writes it to disk. It is 
+    # based on the background field functionality
+
+    userName === nothing ? userName = readDefaults()["USERNAME"] : nothing
+    outputPath === nothing ? outputPath = readDefaults()["OUTPUTS_DIR"] : nothing
 
     fileName = sectionName * ".nc"
 
@@ -69,7 +73,7 @@ function writeOutputFields(;variables::Vector{Array{Float64,3}},sectionName::Str
     end
 
     ds.attrib["Comments"] = "Generated using the GLODAP dataset and gridding data from GO-SHIP Easy Ocean."
-    ds.attrib["Creator"] = "Charles Turner"
+    ds.attrib["Creator"] = userName
 
     close(ds)
 
