@@ -60,7 +60,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         if varNeedsFlags == true
             println("Removing flagged data")
             varFlagsName::String = variableName * "f"
-            variableFlags = loadGLODAPVariable(GLODAP_DIR,varFlagsName,GLODAP_expocode=expocode)
+            variableFlags = loadGLODAPVariable(varFlagsName,GLODAP_DIR,GLODAP_expocode=expocode)
             variable = removeFlaggedData(variable,variableFlags)
         end
 
