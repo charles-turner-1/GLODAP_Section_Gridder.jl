@@ -64,11 +64,11 @@ function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
 end
 
 
-function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,nothing}=nothing
-                                    ,GOSHIP_DIR::Union{String,nothing}=nothing
-                                    ,MASK_MATFILE::Union{String,nothing}=nothing
-                                    ,EXCEPTIONS_DIR::Union{String,nothing}=nothing
-                                    ,EXCEPTIONS_FILENAME::Union{String,nothing}=nothing
+function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
+                                    ,GOSHIP_DIR::Union{String,Nothing}=nothing
+                                    ,MASK_MATFILE::Union{String,Nothing}=nothing
+                                    ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing
+                                    ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing
                                     ,sectionName::String
                                     ,horzCoordinate::String
                                     ,variable::Array{Float64})

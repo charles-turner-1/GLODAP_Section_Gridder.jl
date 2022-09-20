@@ -1,6 +1,10 @@
 function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,GOSHIP_DIR::Union{String,Nothing}=nothing
                             ,MASK_MATFILE::Union{String,Nothing}=nothing
+                            ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing
+                            ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing
+                            ,VARIABLE_EXCEPTIONS::Union{String,Nothing}=nothing
+                            ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing
                             ,sectionName::String
                             ,horzCoordinate::String
                             ,expocode::String
@@ -25,9 +29,14 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         error("\"meanValue\" must be specified to be either \"horzMean\", \"scalar\" or \"climatology\"")
     end
 
+    # Now load all the defaults if needs be
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
     GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    EXCEPTIONS_FILENAME === nothing ? EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+    VARIABLE_EXCEPTIONS === nothing ? VARIABLE_EXCEPTIONS = readDefaults()["VARIABLE_EXCEPTIONS"] : nothing
+    HORZLEN_EXCEPTIONS === nothing ? HORZLEN_EXCEPTIONS = readDefaults()["HORZLEN_EXCEPTIONS"] : nothing
+
 
     meanValue == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
@@ -38,11 +47,10 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         bestFactorε = 1
     end
 
-    gridDir, _, _ = load_GOSHIP_Directories(GOSHIP_DIR)
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,GOSHIP_DIR,MASK_MATFILE)
 
-    isAnException = testExpocodeException(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
-    println(isAnException)
+    isAnException = testExpocodeException(expocode=expocode,variableName=variableName
+         ,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
     if !isAnException
         variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode)
@@ -58,7 +66,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
 
     else
         println("Cruise "* expocode * " is an exception: loading exception data")
-        (variable, griddingVars) = loadExceptionData(expocode=expocode,variableName=variableName,maskMatfile=MASK_MATFILE)
+        (variable, griddingVars) = loadExceptionData(expocode=expocode
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
     end
 
     if variableName == "G2tco2"
@@ -74,7 +83,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     station = griddingVars["G2station"]
 
     goodIdx = checkVariableExceptions(expocode=expocode,variableName=variableName
-    ,maskMatfile=MASK_MATFILE,GLODAP_DIR=GLODAP_DIR,variable=variable,station=station,pressure=pressure)
+    ,EXCEPTIONS_FILENAME=VARIABLE_EXCEPTIONS,GLODAP_DIR=GLODAP_DIR,variable=variable
+    ,station=station,pressure=pressure,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
     lon = lon[goodIdx]; lat = lat[goodIdx]; pressure = pressure[goodIdx];
     sigma = sigma[goodIdx]; station = station[goodIdx]; variable = variable[goodIdx]
@@ -107,7 +117,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
 
     lenxFactor = checkHorzLenFactor(expocode=expocode,variableName=variableName
-                                   ,griddingType=gridding)
+                   ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
 
     len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
     ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
@@ -128,9 +138,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         ,horzCorrLength=bestFactorLen*len[2],vertCorrLength=bestFactorLen*len[1]
         ,horzCoordinate=horzCoordinate,meanValue=meanValue,bgField=bgField)
     elseif gridding == "isopycnic"
-        lenxPrescribed = checkHorzLenFactor(expocode=expocode
-                                           ,variableName=variableName
-                                           ,griddingType=gridding)
+        lenxPrescribed = checkHorzLenFactor(expocode=expocode,variableName=variableName
+                   ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
 
         griddedVarEasyPipeline = easyDIVAisopycnal(obsVariable=variable,
         obsSigma=sigma,obsPressure=pressure,obsLat=lat,obsLon=lon,latLon=XDIR
@@ -148,17 +157,21 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     return griddedVarEasyPipeline
 end
 
-function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
-                            ,GOSHIP_DIR::String="/Users/ct6g18/MATLAB/GO_SHIP"
-                            ,MASK_MATFILE::String="/Users/ct6g18/Julia/ExcessHeat/GLODAP_Easy_Ocean/GOSHIP_MaskStruct.mat"
-                            ,sectionName::String
-                            ,horzCoordinate::String
-                            ,expocodeDir::Union{Nothing,String}=nothing
-                            ,gridding::String="isobaric"
-                            ,fieldMeanVal::String="scalar"
-                            ,epsilonVal::Float64=0.01
-                            ,autoTruncateMask::Bool=false
-                            ,variableName::String)
+function gridSectionPipeline(;sectionName::String
+                             ,variableName::String
+                             ,horzCoordinate::String
+                             ,gridding::String="isobaric"
+                             ,fieldMeanVal::String="scalar"
+                             ,epsilonVal::Float64=0.01
+                             ,autoTruncateMask::Bool=false
+                             ,GLODAP_DIR::Union{String,Nothing}=nothing
+                             ,GOSHIP_DIR::Union{String,Nothing}=nothing
+                             ,MASK_MATFILE::Union{String,Nothing}=nothing
+                             ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing
+                             ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing
+                             ,EXPOCODE_DIR::Union{Nothing,String}=nothing
+                             ,VARIABLE_EXCEPTIONS::Union{String,Nothing}=nothing
+                             ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
     # Calls all the functions necessary to grid all the cruises from an entire 
     # section
     if horzCoordinate != "longitude" && horzCoordinate != "latitude"
@@ -176,15 +189,24 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
     fieldMeanVal == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
-    if expocodeDir === nothing
-        gridDir, repDir, expocodeDir = load_GOSHIP_Directories(GOSHIP_DIR)
+    # Now load all the defaults if needs be
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    #EXCEPTIONS_DIR === nothing ? EXCEPTIONS_DIR = readDefaults()["EXCEPTIONS_DIR"] : nothing
+    EXCEPTIONS_FILENAME === nothing ? EXCEPTIONS_FILENAME = readDefaults()["EXCEPTIONS_FILENAME"] : nothing
+    VARIABLE_EXCEPTIONS === nothing ? VARIABLE_EXCEPTIONS = readDefaults()["VARIABLE_EXCEPTIONS"] : nothing
+    HORZLEN_EXCEPTIONS === nothing ? HORZLEN_EXCEPTIONS = readDefaults()["HORZLEN_EXCEPTIONS"] : nothing
+
+    if EXPOCODE_DIR === nothing
+        gridDir, repDir, EXPOCODE_DIR = load_GOSHIP_Directories(GOSHIP_DIR)
     else
         gridDir, repDir, _ = load_GOSHIP_Directories(GOSHIP_DIR)
     end
 
-    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,GOSHIP_DIR,MASK_MATFILE)
 
-    expocodeInfo = listSectionExpocodes(sectionName,expocodeDir)
+    expocodeInfo = listSectionExpocodes(sectionName,EXPOCODE_DIR)
     expocodes = expocodeInfo[!,"GLODAP Expocode"]
 
     outputArray = fill(NaN,size(sectionMask,1),size(sectionMask,2),length(expocodes))
@@ -192,12 +214,13 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
     goodExpocodeIdx = fill(1,0)
     for expocode in enumerate(expocodes)
         try
-            isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName,maskMatfile=MASK_MATFILE)
+    isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName
+         ,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
             if !isAnException
-                variable = loadGLODAPVariable(GLODAP_DIR,variableName,GLODAP_expocode=string(expocode[2]))
+                variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode[2])
             else
                 (variable, griddingVars) = loadExceptionData(expocode=expocode[2]
-                ,variableName=variableName,maskMatfile=MASK_MATFILE)
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
             end
             goodExpocodeIdx = vcat(goodExpocodeIdx,expocode[1])
         catch
@@ -209,7 +232,9 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
     for expocode in enumerate(expocodes)
         println("Starting on cruise " * expocode[2])
 
-        isAnException = testExpocodeException(expocode=expocode[2],variableName=variableName,maskMatfile=MASK_MATFILE)
+        isAnException = testExpocodeException(expocode=expocode[2]
+            ,variableName=variableName,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME
+            ,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
         if !isAnException
             variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode[2])
@@ -220,7 +245,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
             if varNeedsFlags == true
                 println("Removing flagged data")
                 varFlagsName::String = variableName * "f"
-                variableFlags = loadGLODAPVariable(GLODAP_DIR,varFlagsName,GLODAP_expocode=expocode[2])
+                variableFlags = loadGLODAPVariable(varFlagsName,GLODAP_DIR,GLODAP_expocode=expocode[2])
                 variable = removeFlaggedData(variable,variableFlags)
             end
             if variableName == "G2tco2"
@@ -232,7 +257,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (variable, griddingVars) = loadExceptionData(expocode=expocode[2]
-            ,variableName=variableName,maskMatfile=MASK_MATFILE)
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
         end
 
         lon = griddingVars["G2longitude"]
@@ -242,7 +267,8 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         station = griddingVars["G2station"]
 
         goodIdx = checkVariableExceptions(expocode=expocode[2],variableName=variableName
-        ,maskMatfile=MASK_MATFILE,GLODAP_DIR=GLODAP_DIR,variable=variable,station=station,pressure=pressure)
+    ,EXCEPTIONS_FILENAME=VARIABLE_EXCEPTIONS,GLODAP_DIR=GLODAP_DIR,variable=variable
+    ,station=station,pressure=pressure,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
         lon = lon[goodIdx]; lat = lat[goodIdx]; pressure = pressure[goodIdx];
         sigma = sigma[goodIdx]; station = station[goodIdx]; variable = variable[goodIdx]
@@ -254,7 +280,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         end
 
         if autoTruncateMask
-            _, _, sectionMask = loadSectionInfo(sectionName,gridDir,MASK_MATFILE)
+            _, _, sectionMask = loadSectionInfo(sectionName,GOSHIP_DIR,MASK_MATFILE)
             # Need to overwrite sectionMask on each iteration or we will have problems
             isPartialCruise = checkPartialCruise(llGrid
                                                   ;horzCoordinate=horzCoordinate
@@ -272,7 +298,7 @@ function gridSectionPipeline(;GLODAP_DIR::String="/Users/ct6g18/MATLAB/GLODAP"
         scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
 
         lenxFactor = checkHorzLenFactor(expocode=expocode[2],variableName=variableName
-                                       ,griddingType=gridding)
+                   ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
 
         len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
         ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)

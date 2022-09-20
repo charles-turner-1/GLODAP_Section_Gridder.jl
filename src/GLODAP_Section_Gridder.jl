@@ -14,6 +14,7 @@ using Interpolations
 using Base.Threads
 using TOML
 using Plots
+using Statistics
 # Write your package code here.
 include("data_inspection.jl") # Checked
 include("data_loading.jl") # Checked
@@ -23,7 +24,7 @@ include("partial_cruises.jl") # Checked
 include("distances_scales.jl") # Checked, still requires some work but the repackaging is fine.
 include("correlation_lengths.jl") # Checked
 include("DIVA_WrapperFunctions.jl") # Checked
-include("pipelines.jl")
+include("pipelines.jl") 
 include("background_fields.jl")
 include("output_fields.jl")
 

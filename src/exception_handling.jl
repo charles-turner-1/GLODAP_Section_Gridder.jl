@@ -36,7 +36,7 @@ function loadExceptionData(;expocode::Union{String,String15}
 
     EXCEPTIONS_DIR === nothing ?
     exceptionData = joinpath(readDefaults()["EXCEPTIONS_DIR"],"ExceptionData",expocode*".mat") :
-    exceptionData = joinpath(EXCEPTIONS_DIR,"data","Exceptions")
+    exceptionData = joinpath(EXCEPTIONS_DIR,expocode*".mat")
 
     SectionFile = MatFile(exceptionData)
     variable = get_variable(SectionFile,variableName)
@@ -125,7 +125,6 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
     EXCEPTIONS_FILENAME = readDefaults()["VARIABLE_EXCEPTIONS"] : nothing
 
     variableExceptionData = joinpath(EXCEPTIONS_DIR,EXCEPTIONS_FILENAME)
-
     expocodeList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,1])
     variableList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,2])
     stationList = Vector{Int64}(readdlm(variableExceptionData,',';header=false)[2:end,3])
@@ -173,8 +172,13 @@ function checkHorzLenFactor(;expocode::Union{String,String15},variableName::Stri
                             ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
     # Check whether we have a manual horizonal correlation length exception. If 
     # so, apply it in the calculations.
+
+    # TODO: think this needs another argument for EXCEPTIONS_DIR
     HORZLEN_EXCEPTIONS === nothing ? 
-    HORZLEN_EXCEPTIONS = joinpath(root,readDefaults()["EXCEPTIONS_DIR"]) : nothing
+    HORZLEN_EXCEPTIONS = joinpath(root,readDefaults()["EXCEPTIONS_DIR"]
+                        ,readDefaults()["HORZLEN_EXCEPTIONS"]) : 
+    HORZLEN_EXCEPTIONS = joinpath(root,readDefaults()["EXCEPTIONS_DIR"],HORZLEN_EXCEPTIONS)
+
 
     exceptionDataFrame = CSV.read(HORZLEN_EXCEPTIONS,DataFrame)
     EDFsubset = exceptionDataFrame[(exceptionDataFrame.Expocode .== expocode) .&

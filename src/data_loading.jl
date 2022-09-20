@@ -11,13 +11,13 @@ function load_GOSHIP_Directories(GOSHIP_DIR::Union{String,Nothing}=nothing)
 end
 
 function loadSectionInfo(sectionName::String
-                        ,GRID_INFO_DIR::Union{String,Nothing}=nothing
+                        ,GOSHIP_DIR::Union{String,Nothing}=nothing
                         ,MASK_MATFILE::Union{String,Nothing}=nothing)
     # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
     # This needs extending so that a user can add their own section if they want
     # one.
 
-    GRID_INFO_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
     SectionMaskFile = MatFile(MASK_MATFILE)
