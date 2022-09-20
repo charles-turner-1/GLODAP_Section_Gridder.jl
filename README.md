@@ -73,8 +73,42 @@ manually inspect the defaults settings.
 wishes in function calls. However, it is more straightforward to change them in 
 the `defaults.toml` file. A `writeDefaults()` functionality will be implemented 
 soon, however, manual adjustment of `defaults.toml` is still necessary. 
+- `listAvailableMasks()` will list all masks contained in `MASK_MATFILE`. If 
+called with no arguments, it will read the default mask file. If called with an 
+argument, a mask file can be manually specified, eg. `listAvailableMasks(myMaskFile)`.
+- `listSectionExpocodes(sectionName)` allows you to view all the expocodes found
+for a given section. Alternatively, it may be called as `listSectionExpocodes(mySectionName,myExpocodeDir)`,
+which allows the user to specify a different group of expocodes for a given section 
+by specifying the section name and the location of the `.csv` file storing the 
+expocodes.
+- `listAvailableGLODAPVariables()` will list all the variables contained in the 
+GLODAP dataset loaded. This saves you opening MATLAB to do so. It can alternatively 
+be called on non defaults using `listAvailableGLODAPVariables(glodap_dir,glodap_file)`
+to specify a different directory and GLODAP version.
 
 ## Gridding cruises and repeat hydrographic sections
+
+### gridCruisePipeline
+
+`gridCruisePipeline` allows the user to grid a variable from a single hydrographic
+section. All arguments are positional, and all but four are optional.
+
+##### Mandatory Arguments
+- `sectionName`: A string describing the hydrographic section which a cruise 
+occupied, for example "A05", "P06".
+- `horzCoordinate`: A string describing the major direction of the cruise. Currently,
+this must be either `longitude` or `latitude`.
+- `expocode`: A string telling the function which cruise you wish to grid. For 
+example, to grid the 1992 occupation of A05, set `expocode="29HE19920714"`. 
+Expocodes for a section can be found using `listSectionExpocodes(sectionName)`.
+
+##### Optional Arguments
+
+### gridSectionPipeline
+
+`gridSectionPipeline` allows the user to grid a variable from all hydrographic 
+occupations of a given section. All arguments are positional, and all but three
+ are optional.
 
 ## Installation
 
