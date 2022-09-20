@@ -8,10 +8,10 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,sectionName::String
                             ,horzCoordinate::String
                             ,expocode::String
+                            ,variableName::String
                             ,gridding::String="isobaric"
                             ,meanValue::String="scalar"
                             ,epsilonVal::Float64=0.1
-                            ,variableName::String
                             ,plotResults::Bool=false
                             ,autoTruncateMask::Bool=false
                             ,crossValidate::Bool=false
