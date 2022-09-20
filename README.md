@@ -1,4 +1,4 @@
-# GLODAP_Section_Gridder
+# GLODAP_Section_Gridder.jl
 
 This is a package which will enable you to compute gridded sections of bottle 
 data from GLODAP. It glues together 3 data resourses into an easy to use package:
@@ -18,3 +18,23 @@ data from GLODAP. It glues together 3 data resourses into an easy to use package
     The method bears some similarities and equivalences with Optimal Interpolation or Krigging in that it allows to create a smooth and continous field from a collection of observations, observations which can be affected by errors. The analysis method is however different in practise, allowing to take into account topological features, physical constraints etc in a natural way. The method was initially developped with ocean data in mind, but it can be applied to any field where localized observations have to be used to produce gridded fields which are "smooth".
 
 ***This package acts as a wrapper, enabling easy gridding of GLODAP data onto sections provided by GO-SHIP Easy Ocean, using DIVAnd.***
+
+## Getting started
+
+- Presently, the easiest way to install this toolbox is to simply clone this 
+repository (`git clone https://github.com/charles-turner-1/GLODAP_Section_Gridder.jl`).
+    It will soon be available through the native Julia package manager.
+- This package requires that you have a MATLAB licence, and a copy of MATLAB 
+installed, as it interfaces with the MATLAB versions of the GLODAP and GO-SHIP 
+Easy Ocean datasets. It will also write exception data to .mat files. (As MATLAB 
+is not open source, it is intended that this MATLAB dependency will be removed 
+eventually. However, this is not currently a priority.)
+
+## Gridding cruises and repeat hydrographic sections
+
+## Installation
+
+Presently, this package can be installed by cloning this repository (`git clone https://github.com/charles-turner-1/GLODAP_Section_Gridder.jl`). It will soon
+also be available through the native Julia package manager.
+
+## Bugs
