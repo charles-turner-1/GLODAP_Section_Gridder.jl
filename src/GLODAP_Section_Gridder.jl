@@ -24,8 +24,8 @@ include("partial_cruises.jl") # Checked
 include("distances_scales.jl") # Checked, still requires some work but the repackaging is fine.
 include("correlation_lengths.jl") # Checked
 include("DIVA_WrapperFunctions.jl") # Checked
-include("pipelines.jl") 
-include("background_fields.jl")
-include("output_fields.jl")
+include("pipelines.jl") # Checked
+include("background_fields.jl") # Not sure if I want these functions?
+include("output_fields.jl") # Checked
 
 end

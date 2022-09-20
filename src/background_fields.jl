@@ -1,3 +1,23 @@
+function readBackgroundField(;sectionName::String,variableName::String)
+    # This function will go looking for the background field and load it
+    if variableName ∉ ["G2tco2","G2theta","G2salinity"]
+        error("variableName must be either \"G2tco2\", \"G2theta\" or \"G2salinity\"")
+    end
+
+    fileName = sectionName * "_" * variableName * ".nc"
+
+    fileNameFull = joinpath(root,"data","BackgroundFields",fileName)
+
+    ds = Dataset(fileNameFull)
+
+    field = ds[variableName][:]
+    field = convert(Matrix{Float64},field')
+
+    return field
+
+end
+
+# Not sure if we want these so I won't update them for now.
 function createBackgroundField(;variable::String,sectionName::String
                               ,GOSHIP_DIR::String="/home/ct/MATLAB/GO_SHIP"
                               ,GLODAP_DIR::String="/home/ct/MATLAB/GLODAP"
@@ -158,24 +178,3 @@ function writeBackgroundField(;variable::Matrix{Float64},sectionName::String
     return nothing
 
 end
-
-function readBackgroundField(;sectionName::String,variableName::String)
-    # This function will go looking for the background field and load it
-    if variableName != "G2tco2"  && variableName != "G2theta" && variableName != "G2salinity"
-        error("variableName must be either \"G2tco2\", \"G2theta\" or \"G2salinity\"")
-    end
-
-    fileName = sectionName * "_" * variableName * ".nc"
-    pathStr = "/home/ct/Julia/GLODAP_Easy_Ocean/BackgroundFields/"
-
-    fileNameFull = joinpath(pathStr,fileName)
-
-    ds = Dataset(fileNameFull)
-
-    field = ds[variableName][:]
-    field = convert(Matrix{Float64},field')
-
-    return field
-
-end
-
