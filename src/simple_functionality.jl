@@ -116,3 +116,18 @@ function matchLonConventions(lonGrid::Vector{Float64}, lonVal::Float64)
     end
     return lonVal
 end
+
+function checkGriddingVariables(horzCoordinate::String,gridding::String,meanValue::String)
+    # Checks that we are using defined variables. 
+    if horzCoordinate ∉ ["longitude","latitude"]
+        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
+    end
+
+    if gridding ∉ ["isobaric","isopycnic"]
+        error("\"gridding\" must be specified to be either \"isobaric\" or \"isopycnic\"")
+    end
+
+    if meanValue ∉ ["horzMean","scalar","climatology"]
+        error("\"meanValue\" must be specified to be either \"horzMean\", \"scalar\" or \"climatology\"")
+    end
+end

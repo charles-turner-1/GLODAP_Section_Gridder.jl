@@ -17,17 +17,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,crossValidate::Bool=false
                             ,crossValidationNum::Int64=5)
     # Calls all the functions necessary to grid a single cruise.
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
-
-    if gridding != "isobaric" && gridding != "isopycnic"
-        error("\"gridding\" must be specified to be either \"isobaric\" or \"isopycnic\"")
-    end
-
-    if meanValue != "horzMean" && meanValue != "scalar" && meanValue != "climatology"
-        error("\"meanValue\" must be specified to be either \"horzMean\", \"scalar\" or \"climatology\"")
-    end
+    checkGriddingVariables(horzCoordinate,gridding,meanValue)
 
     # Now load all the defaults if needs be
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
@@ -174,17 +164,7 @@ function gridSectionPipeline(;sectionName::String
                              ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
     # Calls all the functions necessary to grid all the cruises from an entire 
     # section
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
-
-    if gridding != "isobaric" && gridding != "isopycnic"
-        error("\"gridding\" must be specified to be either \"isobaric\" or \"isopycnic\"")
-    end
-
-    if fieldMeanVal != "horzMean" && fieldMeanVal != "scalar" && fieldMeanVal != "climatology"
-        error("\"meanValue\" must be specified to be either \"horzMean\", \"scalar\" or \"climatology\"")
-    end
+    checkGriddingVariables(horzCoordinate,gridding,meanValue)
 
     fieldMeanVal == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
