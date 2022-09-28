@@ -1,16 +1,13 @@
 function matchLonConventions(lonGrid::Vector{Float64}, lonVals::Vector{Float64})
     # GO-SHIP Easy Ocean toolbox and GLODAP use different longitude conventions
     # ie. lon ⋹ [-180,180] or lon ⋹ [0,360]. This will ensure tat the match up.
-    if maximum(lonGrid) > 180
-        lonVals[lonVals .< 0] .+= 360
-    end
+    maximum(lonGrid) > 180 ? lonVals[lonVals .< 0] .+= 360 : nothing
     return lonVals
 end
 
 function maskNameFromSectionName(sectionName::String)
     # Gets the mask name from the name of the section we're using.
-    maskName = "mask" * sectionName
-    maskName = replace(maskName,"-" => "_")
+    maskName = "mask" * sectionName |> x -> replace(x,"-" => "_")
     return maskName
 end
 
@@ -67,24 +64,21 @@ end
 
 function findNonNaNIndices(variable::Vector)
     # Very simple function to find indices where vector isn't NaN
-    goodIdx = findall(convert(Vector{Bool},fill(1,size(variable)) - isnan.(variable)))
-    return goodIdx
+    return findall(convert(Vector{Bool},fill(1,size(variable)) - isnan.(variable)))
 end
 
 function findNonNaNIndices(variable::Vector,sigma::Vector)
     # Find all indices where our vector isn't NaN, and the sigma vector isn't NaN
     varGoodIdx = findall(convert(Vector{Bool},fill(1,size(variable)) - isnan.(variable)))
     sigGoodIdx = findall(convert(Vector{Bool},fill(1,size(sigma)) - isnan.(sigma)))
-    goodIdx = intersect(varGoodIdx,sigGoodIdx)
-    return goodIdx
+    return intersect(varGoodIdx,sigGoodIdx)
 end
 
 function calcGLODAP_Date(glodapYear::Vector{Float64},glodapMonth::Vector{Float64}
                         ,glodapDay::Vector{Float64})
     # Calculate a mean date for a cruise
     glodapMonth .-= 1
-    glodapDate = glodapYear + (glodapMonth ./ 12) + (glodapDay ./ 30)
-    return glodapDate
+    return glodapYear + (glodapMonth ./ 12) + (glodapDay ./ 30)
 end
 
 function splitMeanAnom(obsVariable::Vector{Float64},obsPres::Vector{Float64}
@@ -111,9 +105,7 @@ end
 
 function matchLonConventions(lonGrid::Vector{Float64}, lonVal::Float64)
     # Match a single longitude value up with conventions
-    if maximum(lonGrid) > 180 && lonVal < 0
-        lonVal += 360
-    end
+    maximum(lonGrid) > 180 && lonVal < 0 ? lonVal += 360 : nothing
     return lonVal
 end
 
