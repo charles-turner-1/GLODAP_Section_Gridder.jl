@@ -31,8 +31,7 @@ function listSectionExpocodes(sectionName::String
     else # Allow manual specification of expocodeDir so user can specify something weird if they want
         expocodes = joinpath(expocodeDir,sectionName) * ".csv"
     end
-    expocodes = CSV.read(expocodes,DataFrame)
-    return expocodes
+    return CSV.read(expocodes,DataFrame)
 end
 
 
