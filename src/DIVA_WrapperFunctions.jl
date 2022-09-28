@@ -32,18 +32,16 @@ function easyDIVAGrid(;variable::Vector{Float64}
         varMean, varAnom = splitMeanAnom(variable,vertVar,vertGrid,horzGrid)
     elseif meanValue == "scalar"
         varMean, varAnom = splitMeanAnom(variable)
-    elseif meanValue in ["climatology","calculated"]
+    elseif meanValue == "climatology"
         if bgField === nothing
-            error("If meanValue is specified to be \"climatology\" or \"calculated\" a background
-            field must be provided to easyDIVAGrid")
+            error("If meanValue is specified to be \"climatology\" a background
+            field must be provided")
         else
             varAnom = splitMeanAnom(;obsVariable=variable,obsPres=vertVar
                                     ,obsLatLon=latLon,bgField=bgField
                                     ,vertGrid=vertGrid,horzGrid=horzGrid)
             varMean = bgField
         end
-    else
-        error("\"meanValue\" must be specified to be either \"horzMean\",\"climatology\" or \"scalar\"")
     end
 
     # I think it's necessary to filter out NaN indices or we wind up with shitty
