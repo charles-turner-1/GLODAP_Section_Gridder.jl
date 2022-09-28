@@ -32,10 +32,10 @@ function easyDIVAGrid(;variable::Vector{Float64}
         varMean, varAnom = splitMeanAnom(variable,vertVar,vertGrid,horzGrid)
     elseif meanValue == "scalar"
         varMean, varAnom = splitMeanAnom(variable)
-    elseif meanValue == "climatology"
+    elseif meanValue in ["climatology","calculated"]
         if bgField === nothing
-            error("If meanValue is specified to be \"climatology\" a background
-            field must be provided")
+            error("If meanValue is specified to be \"climatology\" or \"calculated\" a background
+            field must be provided to easyDIVAGrid")
         else
             varAnom = splitMeanAnom(;obsVariable=variable,obsPres=vertVar
                                     ,obsLatLon=latLon,bgField=bgField

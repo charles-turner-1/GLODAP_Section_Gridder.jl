@@ -127,7 +127,7 @@ function checkGriddingVariables(horzCoordinate::String,gridding::String,meanValu
         error("\"gridding\" must be specified to be either \"isobaric\" or \"isopycnic\"")
     end
 
-    if meanValue ∉ ["horzMean","scalar","climatology"]
-        error("\"meanValue\" must be specified to be either \"horzMean\", \"scalar\" or \"climatology\"")
+    if meanValue ∉ ["horzMean","scalar","climatology","calculated"]
+        error("\"meanValue\" must be specified to be either \"horzMean\", \"calculated\" ,\"scalar\" or \"climatology\"")
     end
 end
