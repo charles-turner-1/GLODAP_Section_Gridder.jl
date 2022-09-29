@@ -151,7 +151,7 @@ function gridSectionPipeline(;sectionName::String
                              ,variableName::String
                              ,horzCoordinate::String
                              ,gridding::String="isobaric"
-                             ,fieldMeanVal::String="scalar"
+                             ,meanValue::String="scalar"
                              ,epsilonVal::Float64=0.1
                              ,autoTruncateMask::Bool=false
                              ,GLODAP_DIR::Union{String,Nothing}=nothing
@@ -166,7 +166,7 @@ function gridSectionPipeline(;sectionName::String
     # section
     checkGriddingVariables(horzCoordinate,gridding,meanValue)
 
-    fieldMeanVal == "climatology" ? bgField = readBackgroundField(
+    meanValue == "climatology" ? bgField = readBackgroundField(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
     # Now load all the defaults if needs be
@@ -287,7 +287,7 @@ function gridSectionPipeline(;sectionName::String
             griddedVarEasyPipeline = easyDIVAGrid(variable=variable,vertVar=pressure,latLon=XDIR
             ,horzCoordinate=horzCoordinate,vertGrid=prGrid,horzGrid=llGrid,horzScale=scaleHorz
             ,vertScale=scaleVert,mask=sectionMask,Epsilon=epsilonVal,horzCorrLength=len[2]
-            ,vertCorrLength=len[1],meanValue=fieldMeanVal,bgField=bgField)
+            ,vertCorrLength=len[1],meanValue=meanValue,bgField=bgField)
         elseif gridding == "isopycnic"
             griddedVarEasyPipeline = easyDIVAisopycnal(obsVariable=variable,obsSigma=sigma,obsPressure=pressure
             ,pressureMask=sectionMask,obsLat=lat,obsLon=lon,latLon=XDIR,vertGrid=prGrid,horzGrid=llGrid
