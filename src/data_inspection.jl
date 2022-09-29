@@ -1,14 +1,32 @@
 function readDefaults()
     # This function will look at the defaults in defaults.toml and save them. It
     # will also print them unless told not to.
-    defaultsDict = TOML.parsefile("./defaults.toml")
-    defaultsDict["MASK_MATFILE"] = joinpath(root,defaultsDict["MASK_MATFILE"])
-    return defaultsDict
+    return TOML.parsefile("./defaults.toml")
 end
 
 function changeDefaults()
-    # Could also add a function which changes the defaults. Not sure if absolutely
-    # necessary.
+
+    @warn("This function will overwrite your defaults.toml file. If you want to
+    restore it to the default settings, use restoreDefaults().")
+    defaults = TOML.parsefile("./defaults.toml")
+    changeFile = true
+    while changeFile == true
+        display(defaults)
+        println("Do you wish to change default file? Y/n")
+        if lowercase(readline()) == "n" 
+            changeFile = false; continue
+        end
+        println("Which field do you wish to change?")
+        fieldName = readline()
+        println("What do you wish to change \"" * fieldName * "\" to?")
+        fieldVal = readline()
+        haskey(defaults,fieldName) ? defaults[fieldName] = fieldVal :
+        @warn("Field \"" * fieldName * "\" not found")
+    end
+    @info("Writing new defaults")
+    open("./defaults.toml", "w") do io
+        TOML.print(io,defaults)
+    end
     return nothing
 end
 

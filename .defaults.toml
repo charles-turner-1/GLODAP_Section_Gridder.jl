@@ -1,0 +1,23 @@
+# Defaults
+
+# This is where the defaults for the GLODAP_Section_Gridder toolbox live. In order
+# to use the toolbox, you will need to tell the toolbox where you have installed 
+# the GO-SHIP Easy Ocean toolbox (https://github.com/kkats/GO-SHIP-Easy-Ocean) has
+# been installed, where you have installed the GLODAP dataset, which GLODAP 
+# dataset you are using, and where you have stored the stucture of masks obtained
+# from the GO-SHIP Easy Ocean toolbox. Additionally, you will need to tell it where
+# exceptions live, and what they are called. 
+
+GOSHIP_DIR = "/Users/ct6g18/MATLAB/GO_SHIP"
+GLODAP_DIR =  "/Users/ct6g18/MATLAB/GLODAP" 
+GLODAP_FILENAME = "GLODAPv2.2021_Merged_Master_File.mat"
+MASK_MATFILE = "data/GOSHIP_MaskStruct.mat"
+EXCEPTIONS_DIR = "data/Exceptions"
+EXCEPTIONS_FILENAME = "ExpocodeList.csv"
+VARIABLE_EXCEPTIONS = "variableExceptions.csv"
+HORZLEN_EXCEPTIONS = "horzLenExceptions.csv"
+
+# These settings will be used for saving off user gridded fields.
+
+USERNAME = "Charles Turner"
+OUTPUTS_DIR = "/Users/ct6g18/Julia/GriddedSections"
