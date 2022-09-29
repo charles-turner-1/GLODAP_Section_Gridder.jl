@@ -5,7 +5,6 @@ function readDefaults()
 end
 
 function changeDefaults()
-
     @warn("This function will overwrite your defaults.toml file. If you want to
     restore it to the default settings, use restoreDefaults().")
     defaults = TOML.parsefile("./defaults.toml")
@@ -27,6 +26,16 @@ function changeDefaults()
     open("./defaults.toml", "w") do io
         TOML.print(io,defaults)
     end
+    return nothing
+end
+
+function restoreDefaults()
+    @warn("This function will restore your \"defaults.toml\" file to its default
+    state (haha), if you have overwritten it and somehow buggered it up. Use with
+    caution")
+    println("Are you sure you wish to proceed? y/N")
+    lowercase(readline()) == "y" ? nothing : return nothing
+    cp(joinpath(root,".defaults.toml"),joinpath(root,"defaults.toml"),force=true)
     return nothing
 end
 
