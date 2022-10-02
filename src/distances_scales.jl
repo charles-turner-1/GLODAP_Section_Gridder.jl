@@ -14,8 +14,8 @@ function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
     GLODAP_longitudes = [uniqueLocations[i][1] for i = 1:length(uniqueLocations)]
     GLODAP_latitudes = [uniqueLocations[i][2] for i = 1:length(uniqueLocations)]
 
-    dLon = centralDiff(GLODAP_longitudes[1])
-    dLat = centralDiff(GLODAP_latitudes[2])
+    dLon = centralDiff(GLODAP_longitudes)
+    dLat = centralDiff(GLODAP_latitudes)
 
     dLat_m = dLat * 111.2
     dLon_m = dLon * 111.2 .* cos.(GLODAP_latitudes*pi/180)
