@@ -124,7 +124,7 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
     EXCEPTIONS_FILENAME === nothing ? 
     EXCEPTIONS_FILENAME = readDefaults()["VARIABLE_EXCEPTIONS"] : nothing
 
-    variableExceptionData = joinpath(EXCEPTIONS_DIR,EXCEPTIONS_FILENAME)
+    variableExceptionData = joinpath(root,EXCEPTIONS_DIR,EXCEPTIONS_FILENAME)
     expocodeList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,1])
     variableList = Vector{String}(readdlm(variableExceptionData,',';header=false)[2:end,2])
     stationList = Vector{Int64}(readdlm(variableExceptionData,',';header=false)[2:end,3])
