@@ -25,8 +25,7 @@ function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
 
     return horzDist_kilometres
 end
-sort()
-sort!()
+
 function gridVertDistance(pressureGrid
                          ,GLODAP_pressures=nothing)
     # Because GO-SHIP Easy Ocean grids everything onto a 10m vertical grid, all
