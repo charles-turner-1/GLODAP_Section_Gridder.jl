@@ -2,8 +2,20 @@ function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
                         ,GLODAP_longitudes::Vector{Float64}
                         ,latlonGrid)
     # Compute the mean distance between each station in a cruise
-    dLon = centralDiff(GLODAP_longitudes)
-    dLat = centralDiff(GLODAP_latitudes)
+
+    # This needs to be completely redone. What we want is to somehow identify 
+    # each unique station 
+
+    uniqueLocations = unique(zip(GLODAP_latitudes,GLODAP_longitudes))
+    lonRange = maximum(GLODAP_longitudes) - minimum(GLODAP_longitudes)
+    latRange = maximum(GLODAP_latitudes) - minimum(GLODAP_latitudes)
+    lonRange < latRange ? sort!(uniqueLocations, by = x -> x[1]) :
+    sort!(uniqueLocations, by = x -> x[2])
+    GLODAP_longitudes = [uniqueLocations[i][1] for i = 1:length(v)]
+    GLODAP_latitudes = [uniqueLocations[i][2] for i = 1:length(v)]
+
+    dLon = centralDiff(GLODAP_longitudes[1])
+    dLat = centralDiff(GLODAP_latitudes[2])
 
     dLat_m = dLat * 111.2
     dLon_m = dLon * 111.2 .* cos.(GLODAP_latitudes*pi/180)
@@ -13,7 +25,8 @@ function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
 
     return horzDist_kilometres
 end
-
+sort()
+sort!()
 function gridVertDistance(pressureGrid
                          ,GLODAP_pressures=nothing)
     # Because GO-SHIP Easy Ocean grids everything onto a 10m vertical grid, all
