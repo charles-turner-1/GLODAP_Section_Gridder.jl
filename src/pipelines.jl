@@ -299,3 +299,101 @@ function gridSectionPipeline(;sectionName::String
     println(goodExpocodeIdx)
     return outputArray
 end
+
+function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
+                            ,GOSHIP_DIR::Union{String,Nothing}=nothing
+                            ,MASK_MATFILE::Union{String,Nothing}=nothing
+                            ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing
+                            ,horzLenFactor::Float64=1.0
+                            ,sectionName::String
+                            ,horzCoordinate::String
+                            ,expocode::String
+                            ,variableName::String
+                            ,gridding::String="isobaric"
+                            ,meanValue::String="scalar"
+                            ,epsilonVal::Float64=0.1
+                            ,plotResults::Bool=false
+							,autoTruncateMask::Bool=false)
+
+    # Calls all the functions necessary to grid a single cruise.
+    checkGriddingVariables(horzCoordinate,gridding,meanValue)
+
+    # Now load all the defaults if needs be
+    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
+    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
+    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+
+    meanValue == "climatology" ? bgField = readBackgroundField(
+    sectionName=sectionName,variableName=variableName) : bgField = nothing
+
+
+    llGrid, prGrid, sectionMask = loadSectionInfo(sectionName,GOSHIP_DIR,MASK_MATFILE)
+
+    (variable, griddingVars) = loadExceptionData(expocode=expocode
+            ,variableName=variableName,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
+
+    lon = griddingVars["G2longitude"]
+    lat = griddingVars["G2latitude"]
+    pressure = griddingVars["G2pressure"]
+    sigma = griddingVars["G2gamma"]
+    station = griddingVars["G2station"]
+
+
+    if horzCoordinate == "longitude"
+        XDIR = lon
+    elseif horzCoordinate == "latitude"
+        XDIR = lat
+    end
+
+    if autoTruncateMask
+        isPartialCruise = checkPartialCruise(llGrid
+                                              ;horzCoordinate=horzCoordinate
+                                              ,obsLat=lat,obsLon=lon)
+        if isPartialCruise
+            println("Cruise did not occcupy full section, truncating mask")
+            sectionMask = maskPartialCruise(sectionMask,obsLat=lat,obsLon=lon
+                                            ,horzGrid=llGrid,horzCoordinate=horzCoordinate)
+        end
+    end
+
+    if variableName in ["G2longitude","G2latitude","G2year","G2month"]
+        sectionMask .= true
+    end
+
+    horzDist = gridHorzDistance(lat,lon,llGrid)
+    vertDist = gridVertDistance(prGrid)
+
+    scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
+
+    lenxFactor = horzLenFactor
+
+    len = calcCorrLengths(variable,obsLat=lat,obsLon=lon,obsPres=pressure
+    ,presGrid=prGrid,pressureStepNumber=10,verticalSearchRange=100,lenxFactor=lenxFactor)
+
+    if gridding == "isobaric"
+        griddedVarEasyPipeline = easyDIVAGrid(variable=variable,vertVar=pressure
+        ,latLon=XDIR,vertGrid=prGrid,horzGrid=llGrid,horzScale=scaleHorz
+        ,vertScale=scaleVert,mask=sectionMask,Epsilon=epsilonVal
+        ,horzCorrLength=len[2],vertCorrLength=len[1]
+        ,horzCoordinate=horzCoordinate,meanValue=meanValue,bgField=bgField)
+    elseif gridding == "isopycnic"
+        lenxPrescribed = checkHorzLenFactor(expocode=expocode,variableName=variableName
+                   ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
+
+        griddedVarEasyPipeline = easyDIVAisopycnal(obsVariable=variable,
+        obsSigma=sigma,obsPressure=pressure,obsLat=lat,obsLon=lon,latLon=XDIR
+        ,vertGrid=prGrid,horzGrid=llGrid,horzScale=scaleHorz,vertScale=scaleVert
+        ,pressureMask=sectionMask,Epsilon=epsilonVal,horzCorrLength=len[2]
+        ,vertCorrLength=len[1],horzCorrLengthPrescribed=lenxPrescribed)
+    end
+
+    if plotResults == true
+        display(heatmap(vec(llGrid),vec(prGrid),griddedVarEasyPipeline, c=:jet1
+        ,yflip=true, title=(variableName[3:end] * ", cruise:" * expocode * ", gridding: "* gridding)
+        ,xlabel=horzCoordinate,ylabel="Pressure"))
+    end
+
+    return griddedVarEasyPipeline
+end
+
+
