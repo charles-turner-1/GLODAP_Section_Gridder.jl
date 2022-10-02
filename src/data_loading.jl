@@ -20,7 +20,7 @@ function loadSectionInfo(sectionName::String
     GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
-    SectionMaskFile = MatFile(MASK_MATFILE)
+    SectionMaskFile = MatFile(joinpath(root,MASK_MATFILE))
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     sectionMaskName = maskNameFromSectionName(sectionName)
     mask = maskDict[sectionMaskName]
