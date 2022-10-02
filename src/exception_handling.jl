@@ -19,7 +19,7 @@ function testExpocodeException(;expocode::Union{String,String15}
 
     if isException == true # Now open the .mat file associated with our expocode
         # see if we can find the variable we're after
-        exceptionData = joinpath(EXCEPTIONS_DIR,"ExceptionData",expocode*".mat")
+        exceptionData = joinpath(root,EXCEPTIONS_DIR,"ExceptionData",expocode*".mat")
         SectionFile = MatFile(exceptionData)
         exceptionDataVariables = variable_names(SectionFile)
 
