@@ -1,13 +1,13 @@
 function readDefaults()
     # This function will look at the defaults in defaults.toml and save them. It
     # will also print them unless told not to.
-    return TOML.parsefile("./defaults.toml")
+    return TOML.parsefile(joinpath(root,"defaults.toml"))
 end
 
 function changeDefaults()
     @warn("This function will overwrite your defaults.toml file. If you want to
     restore it to the default settings, use restoreDefaults().")
-    defaults = TOML.parsefile("./defaults.toml")
+    defaults = TOML.parsefile(joinpath(root,"defaults.toml"))
     changeFile = true
     while changeFile == true
         display(defaults)
@@ -23,7 +23,7 @@ function changeDefaults()
         @warn("Field \"" * fieldName * "\" not found")
     end
     @info("Writing new defaults")
-    open("./defaults.toml", "w") do io
+    open(joinpath(root,"defaults.toml"), "w") do io
         TOML.print(io,defaults)
     end
     return nothing
