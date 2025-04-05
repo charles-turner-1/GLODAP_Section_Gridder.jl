@@ -161,7 +161,7 @@ function loadGLODAPvariables(GLODAP_VariableNames::Vector{String}
 end
 
 
-function loadGLODAPVariables(GLODAP_VariableNames::Vector{String}
+function load_glodap_vars(GLODAP_VariableNames::Vector{String}
     ,GLODAP_DIR::Union{String,Nothing}=nothing
     ;GLODAP_FILENAME::Union{String,Nothing}=nothing
     ,GLODAP_expocodes::Union{Vector{String},Vector{String15},Nothing}=nothing

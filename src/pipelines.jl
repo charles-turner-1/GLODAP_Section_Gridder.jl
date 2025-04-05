@@ -17,7 +17,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,crossValidate::Bool=false
                             ,crossValidationNum::Int64=5)
     # Calls all the functions necessary to grid a single cruise.
-    checkGriddingVariables(horzCoordinate,gridding,meanValue)
+    check_gridding_vars(horzCoordinate,gridding,meanValue)
 
     # Now load all the defaults if needs be
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
@@ -28,7 +28,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     HORZLEN_EXCEPTIONS === nothing ? HORZLEN_EXCEPTIONS = readDefaults()["HORZLEN_EXCEPTIONS"] : nothing
 
 
-    meanValue == "climatology" ? bgField = readBackgroundField(
+    meanValue == "climatology" ? bgField = read_bgfield(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
     if crossValidate == false
@@ -44,7 +44,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
 
     if !isAnException
         variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode)
-        griddingVars = loadGLODAPVariables(["G2longitude","G2latitude","G2pressure","G2gamma","G2station"],GLODAP_DIR,GLODAP_expocode=expocode)
+        griddingVars = load_glodap_vars(["G2longitude","G2latitude","G2pressure","G2gamma","G2station"],GLODAP_DIR,GLODAP_expocode=expocode)
 
         varNeedsFlags = hasDataFlags(variableName)
         if varNeedsFlags == true
@@ -164,9 +164,9 @@ function gridSectionPipeline(;sectionName::String
                              ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
     # Calls all the functions necessary to grid all the cruises from an entire 
     # section
-    checkGriddingVariables(horzCoordinate,gridding,meanValue)
+    check_gridding_vars(horzCoordinate,gridding,meanValue)
 
-    meanValue == "climatology" ? bgField = readBackgroundField(
+    meanValue == "climatology" ? bgField = read_bgfield(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
     # Now load all the defaults if needs be
@@ -218,7 +218,7 @@ function gridSectionPipeline(;sectionName::String
 
         if !isAnException
             variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode[2])
-            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude","G2pressure"
+            griddingVars = load_glodap_vars(["G2longitude","G2latitude","G2pressure"
             ,"G2gamma","G2station"],GLODAP_DIR,GLODAP_expocode=expocode[2])
 
             varNeedsFlags = hasDataFlags(variableName)
@@ -316,14 +316,14 @@ function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
 							,autoTruncateMask::Bool=false)
 
     # Calls all the functions necessary to grid a single cruise.
-    checkGriddingVariables(horzCoordinate,gridding,meanValue)
+    check_gridding_vars(horzCoordinate,gridding,meanValue)
 
     # Now load all the defaults if needs be
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
     GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
-    meanValue == "climatology" ? bgField = readBackgroundField(
+    meanValue == "climatology" ? bgField = read_bgfield(
     sectionName=sectionName,variableName=variableName) : bgField = nothing
 
 

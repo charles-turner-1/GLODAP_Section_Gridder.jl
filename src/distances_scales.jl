@@ -14,8 +14,8 @@ function gridHorzDistance(GLODAP_latitudes::Vector{Float64}
     GLODAP_longitudes = [uniqueLocations[i][1] for i = 1:length(uniqueLocations)]
     GLODAP_latitudes = [uniqueLocations[i][2] for i = 1:length(uniqueLocations)]
 
-    dLon = centralDiff(GLODAP_longitudes)
-    dLat = centralDiff(GLODAP_latitudes)
+    dLon = central_diff(GLODAP_longitudes)
+    dLat = central_diff(GLODAP_latitudes)
 
     dLat_m = dLat * 111.2
     dLon_m = dLon * 111.2 .* cos.(GLODAP_latitudes*pi/180)
@@ -48,7 +48,7 @@ end
 function gridSigDistance(sigmaGrid::Vector{Float64})
     # Work out the characteristic mean sigma grid distance. Could probably merge
     # this with the previous function
-    sigmaMeanDist = mean(centralDiff(sigmaGrid))
+    sigmaMeanDist = mean(central_diff(sigmaGrid))
     sigmaMeanDist = fill(sigmaMeanDist, size(sigmaGrid))
 
     return sigmaMeanDist

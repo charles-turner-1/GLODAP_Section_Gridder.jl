@@ -111,7 +111,7 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
     if variable === nothing
         GLODAP_DIR === nothing ?  GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
 
-        vars = loadGLODAPVariables([variableName,"G2station","G2pressure"]
+        vars = load_glodap_vars([variableName,"G2station","G2pressure"]
         ,GLODAP_DIR,GLODAP_expocode=expocode)
         variable = vars[variableName]
         station = vars["G2station"]

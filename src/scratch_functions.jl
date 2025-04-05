@@ -68,7 +68,7 @@ function checkPartialCruise(;glodapDir::String="/home/ct/MATLAB/GLODAP"
 
     if horzCoordinate == "longitude"
          obsXval = lon
-         lon = matchLonConventions(horzGrid,lon)
+         lon = modulo_lon(horzGrid,lon)
     else
           obsXval = lat
     end

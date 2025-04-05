@@ -31,7 +31,7 @@ function calcCorrLengths(variable::Vector{Float64}
                                 ,verticalSearchRange::Number=100
                                 ,lenxFactor::Number=1)
     # Calculate vertical and horizontal correlation lengths
-    goodIdx = findNonNaNIndices(variable)
+    goodIdx = non_nan_indices(variable)
 
     length(goodIdx) < 1 ? error("No observations found") : nothing
     if obsLon == variable || obsLat == variable
@@ -103,7 +103,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
                                 ,sigmaStepNumber::Integer=10
                                 ,verticalSearchRange::Float64=0.0001)
     # Calculate correlation lengths in density space.
-    goodIdx = findNonNaNIndices(variable,obsSigma)
+    goodIdx = non_nan_indices(variable,obsSigma)
     lenz, _ = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
     ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=verticalSearchRange
     ,smoothz=0.1)

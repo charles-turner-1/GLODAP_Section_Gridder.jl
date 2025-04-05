@@ -9,7 +9,7 @@ function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
 
     if horzCoordinate == "longitude"
          obsXval = obsLon
-         obsLon = matchLonConventions(horzGrid,obsLon)
+         obsLon = modulo_lon(horzGrid,obsLon)
     else
          obsXval = obsLat
     end
@@ -44,7 +44,7 @@ function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
 
     if horzCoordinate == "longitude"
          obsXval = obsLon
-         obsLon = matchLonConventions(horzGrid,obsLon)
+         obsLon = modulo_lon(horzGrid,obsLon)
     else
          obsXval = obsLat
     end
@@ -113,7 +113,7 @@ function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
 
         if !isAnException
-            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
+            griddingVars = load_glodap_vars(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]
@@ -182,7 +182,7 @@ function checkSectionPartialCruises(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,EXCEPTIONS_FILENAME=EXCEPTIONS_FILENAME
                             ,EXCEPTIONS_DIR=EXCEPTIONS_DIR)
         if !isAnException
-            griddingVars = loadGLODAPVariables(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
+            griddingVars = load_glodap_vars(["G2longitude","G2latitude"],GLODAP_DIR,GLODAP_expocode=expocode[2])
         else
             println("Cruise " * expocode[2]* " is an exception: loading data")
             (_, griddingVars) = loadExceptionData(expocode=expocode[2]

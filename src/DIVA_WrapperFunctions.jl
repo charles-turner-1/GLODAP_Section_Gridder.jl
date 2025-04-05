@@ -23,7 +23,7 @@ function easyDIVAGrid(;variable::Vector{Float64}
     # This is the wrapped that calls DIVAnd.
 
     if horzCoordinate == "longitude"
-        latLon = matchLonConventions(horzGrid,latLon)
+        latLon = modulo_lon(horzGrid,latLon)
     elseif horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
     end
@@ -46,7 +46,7 @@ function easyDIVAGrid(;variable::Vector{Float64}
 
     # I think it's necessary to filter out NaN indices or we wind up with shitty
     # fields coming out
-    goodIdx = findNonNaNIndices(variable)
+    goodIdx = non_nan_indices(variable)
 
     P_grid,L_grid = ndgrid(vertGrid,horzGrid)
     corrLengths = corrLengthVectorToMatrix(horzCorrLength,vertCorrLength,vertGrid,horzGrid)
@@ -135,7 +135,7 @@ function easyDIVAisopycnal(;obsVariable::Vector{Float64}
                       ,vertCorrLength::Vector{Float64})
     # Applies DIVA gridding on density surfaces.
     if latLon == obsLon
-        obsLon = matchLonConventions(horzGrid,obsLon)
+        obsLon = modulo_lon(horzGrid,obsLon)
         horzCoordinate = "longitude"
     else
         horzCoordinate = "latitude"
@@ -211,7 +211,7 @@ function easyDIVACrossValidate(;variable::Vector{Float64}
                                ,methodVal::Int64=0)
     # Perform DIVA cross validation
     if horzCoordinate == "longitude"
-        latLon = matchLonConventions(horzGrid,latLon)
+        latLon = modulo_lon(horzGrid,latLon)
     elseif horzCoordinate != "latitude"
         error("\"horzCoordinate\" must be specified to be either \"longitude\"
         or \"latitude\"")
