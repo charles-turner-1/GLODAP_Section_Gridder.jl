@@ -1,5 +1,6 @@
 using DataFrames
 using CSV
+using NCDatasets
 
 pkg_root = dirname(@__DIR__) # This is kinda janky, is it idomatic?
 
@@ -21,9 +22,17 @@ function loadSectionInfo(sectionName::String
     # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
     # This needs extending so that a user can add their own section if they want
     # one.
+    #=
+    ***
+    It looks like we can load a bunch of these as netCDF's from here:
+    https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1
 
-    GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
-    MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
+    Maybe this can let us rip the matlab backend out of this & start fixing the 
+    gridding code.
+    =#
+
+    GOSHIP_DIR = something(GOSHIP_DIR,readDefaults()["GOSHIP_DIR"])
+    MASK_MATFILE = something(MASK_MATFILE,readDefaults()["MASK_MATFILE"])
 
     SectionMaskFile = MatFile(joinpath(pkg_root,MASK_MATFILE))
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
@@ -59,6 +68,43 @@ function loadSectionInfo(sectionName::String
 
     return ll_grid, pr_grid, mask
 end
+
+function load_coords_and_mask(section_name::String,
+                              )::Tuple{Vector{Real},Vector{Real},Matrix{Bool}}
+    # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
+    # This needs extending so that a user can add their own section if they want
+    # one.
+    #=
+    ***
+    It looks like we can load a bunch of these as netCDF's from here:
+    https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1
+
+    Maybe this can let us rip the matlab backend out of this & start fixing the 
+    gridding code.
+    =#
+    
+    ds = NCDataset(joinpath(pkg_root,"data","masks","$section_name.nc"))
+
+    horz_coord = first(filter(x -> x != "pressure", dimnames(ds)))
+
+    ll_grid = ds[horz_coord][:]
+    pr_grid = ds["pressure"][:]
+    
+
+    mask = ds["mask"]
+    mask = convert(Array{Bool},(mask .== 1))
+
+    basin = section_name[1]
+
+    if basin != 'P'
+        ll_grid[ll_grid .> 180] .-=360 # So GLODAP and GO-SHIP data are using the
+        # same longitudes. Probably will want to update this to be basin dependent
+        # or we might run into problems in the Pacific
+    end
+
+    return ll_grid, pr_grid, mask
+end
+
 
 function loadGLODAPVariable(GLODAP_VariableNames::String
     ,GLODAP_expocodes::Union{AbstractString}
@@ -220,7 +266,7 @@ function rm_flagged_data(input_var::AbstractVector{<:Real}, variablef_flag::Abst
     end
 end
 
-function adjust_tco2(adj_table::String="AdjustmentTable.csv" ,expocode::AbstractString)::Float64
+function adjust_tco2(;expocode::AbstractString,adj_table::String="AdjustmentTable.csv" )::Float64
     # Adjust tCO2 using the GLODAP adjustment table
     
     adj_table = joinpath(pkg_root,"data",adj_table)

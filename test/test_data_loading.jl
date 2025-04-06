@@ -40,3 +40,16 @@ end
 
     @test adjust_tco2(expocode="06AQ19840719") == 0.0
 end
+
+@testset "load_coords_and_mask" begin
+    # Test with a sample file
+    section_name = "A05"
+
+    llGrid, prGrid, mask = load_coords_and_mask(section_name)
+    # Check the results
+    @test size(llGrid) == (670,)
+    @test size(prGrid) == (651,)
+    @test size(mask) == (670, 651)
+
+    @test sum(mask) == 322623
+end
