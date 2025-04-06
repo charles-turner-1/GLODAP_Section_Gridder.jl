@@ -108,9 +108,9 @@ function create_bg_field(; variable::String, sectionName::String, GOSHIP_DIR::St
 
     P_grid, L_grid = ndgrid(clim_dep, lons)
 
-    horzDist = gridHorzDistance(w, x, llGrid)
-    vertDist = gridVertDistance(prGrid)
-    scaleVert, scaleHorz = calcScaleFactors(vertDist, horzDist)
+    horzDist = grid_horz_dist(w, x, llGrid)
+    vertDist = grid_vert_dist(prGrid)
+    scaleVert, scaleHorz = calc_scale_factors(vertDist, horzDist)
 
     (clVert, clHorz) = calcCorrLengths(zVar, obsLat=w, obsLon=x, obsPres=y, presGrid=prGrid)
 

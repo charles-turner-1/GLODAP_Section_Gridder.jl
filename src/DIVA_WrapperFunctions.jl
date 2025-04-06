@@ -140,15 +140,15 @@ function easyDIVAisopycnal(;obsVariable::Vector{Float64}
     else
         horzCoordinate = "latitude"
     end
-    horzDist = gridHorzDistance(obsLat,obsLon,horzGrid)
+    horzDist = grid_horz_dist(obsLat,obsLon,horzGrid)
 
     if horzCorrLengthPrescribed != 0
         horzCorrLength = fill(horzCorrLengthPrescribed,size(horzCorrLength))
     end
 
-    sigGrid = createSigmaGrid(obsSigma)
-    sigDist = gridSigDistance(sigGrid)
-    scaleDens, scaleHorz = calcScaleFactors(sigDist,horzDist)
+    sigGrid = create_sigma_grid(obsSigma)
+    sigDist = grid_sigma_distance(sigGrid)
+    scaleDens, scaleHorz = calc_scale_factors(sigDist,horzDist)
 
     sigmaMask = createDensitySpaceMask(obsSigma,latLon,horzGrid,sigGrid,pressureMask)
     sigmaMask .= true
@@ -177,9 +177,9 @@ function easyDIVAisopycnal(;obsVariable::Vector{Float64}
     S_gridVector = S_grid[:]
     L_gridVector = L_grid[:]
 
-    horzDist = gridHorzDistance(obsLat,obsLon,horzGrid)
-    vertDist = gridVertDistance(vertGrid)
-    scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
+    horzDist = grid_horz_dist(obsLat,obsLon,horzGrid)
+    vertDist = grid_vert_dist(vertGrid)
+    scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
     # We are getting some weird issues when reinterpolating back to pressure space
     # from density space. Presumably related to gridding?
     #sigmaGriddedVariable = easyDIVAGrid(variable=griddedVarSigmaVector,vertVar=griddedPresSigmaVector,latLon=L_gridVector,vertGrid=prGrid,horzGrid=lonGrid,horzScale=scaleHorz,vertScale=scaleVert,mask=pressureMask,Epsilon=0.01,horzCorrLength=len[2],vertCorrLength=len[1])

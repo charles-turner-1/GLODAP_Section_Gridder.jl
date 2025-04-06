@@ -46,12 +46,12 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         variable = loadGLODAPVariable(variableName,GLODAP_DIR,GLODAP_expocode=expocode)
         griddingVars = load_glodap_vars(["G2longitude","G2latitude","G2pressure","G2gamma","G2station"],GLODAP_DIR,GLODAP_expocode=expocode)
 
-        varNeedsFlags = hasDataFlags(variableName)
+        varNeedsFlags = has_dataflags(variableName)
         if varNeedsFlags == true
             println("Removing flagged data")
             varFlagsName::String = variableName * "f"
             variableFlags = loadGLODAPVariable(varFlagsName,GLODAP_DIR,GLODAP_expocode=expocode)
-            variable = removeFlaggedData(variable,variableFlags)
+            variable = rm_flagged_data(variable,variableFlags)
         end
 
     else
@@ -61,7 +61,7 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     end
 
     if variableName == "G2tco2"
-        tco2Adj = findGLODAPtco2Adjustment(expocode=expocode)
+        tco2Adj = adjust_tco2(expocode=expocode)
         variable .+= tco2Adj
         tco2Adj == 0 ? println("No DIC adjustment necessary") : println("Adjusting DIC by " * string(tco2Adj) * "μmol/kg")
     end
@@ -101,10 +101,10 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         sectionMask .= true
     end
 
-    horzDist = gridHorzDistance(lat,lon,llGrid)
-    vertDist = gridVertDistance(prGrid)
+    horzDist = grid_horz_dist(lat,lon,llGrid)
+    vertDist = grid_vert_dist(prGrid)
 
-    scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
+    scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
 
     lenxFactor = checkHorzLenFactor(expocode=expocode,variableName=variableName
                    ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
@@ -221,15 +221,15 @@ function gridSectionPipeline(;sectionName::String
             griddingVars = load_glodap_vars(["G2longitude","G2latitude","G2pressure"
             ,"G2gamma","G2station"],GLODAP_DIR,GLODAP_expocode=expocode[2])
 
-            varNeedsFlags = hasDataFlags(variableName)
+            varNeedsFlags = has_dataflags(variableName)
             if varNeedsFlags == true
                 println("Removing flagged data")
                 varFlagsName::String = variableName * "f"
                 variableFlags = loadGLODAPVariable(varFlagsName,GLODAP_DIR,GLODAP_expocode=expocode[2])
-                variable = removeFlaggedData(variable,variableFlags)
+                variable = rm_flagged_data(variable,variableFlags)
             end
             if variableName == "G2tco2"
-                tco2Adj = findGLODAPtco2Adjustment(expocode=expocode[2])
+                tco2Adj = adjust_tco2(expocode=expocode[2])
                 tco2Adj == 0 ? println("No DIC adjustment necessary") : println("Adjusting DIC by " * string(tco2Adj) * "μmol/kg")
                 variable .+= tco2Adj
             end
@@ -272,10 +272,10 @@ function gridSectionPipeline(;sectionName::String
             end
         end
 
-        horzDist = gridHorzDistance(lat,lon,llGrid)
-        vertDist = gridVertDistance(prGrid)
+        horzDist = grid_horz_dist(lat,lon,llGrid)
+        vertDist = grid_vert_dist(prGrid)
 
-        scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
+        scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
 
         lenxFactor = checkHorzLenFactor(expocode=expocode[2],variableName=variableName
                    ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
@@ -360,10 +360,10 @@ function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
         sectionMask .= true
     end
 
-    horzDist = gridHorzDistance(lat,lon,llGrid)
-    vertDist = gridVertDistance(prGrid)
+    horzDist = grid_horz_dist(lat,lon,llGrid)
+    vertDist = grid_vert_dist(prGrid)
 
-    scaleVert, scaleHorz = calcScaleFactors(vertDist,horzDist)
+    scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
 
     lenxFactor = horzLenFactor
 

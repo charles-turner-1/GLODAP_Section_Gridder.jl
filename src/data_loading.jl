@@ -1,11 +1,16 @@
-function load_GOSHIP_Directories(GOSHIP_DIR::Union{String,Nothing}=nothing)
+using DataFrames
+using CSV
+
+pkg_root = dirname(@__DIR__) # This is kinda janky, is it idomatic?
+
+function load_goship_dirs(GOSHIP_DIR::Union{String,Nothing}=nothing)::Tuple{String,String,String}
     # Give the paths of the GO_SHIP data and return the files we
     # need to load
     GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
 
     GRID_DIR = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/gridded/" )
     REP_DIR  = joinpath(GOSHIP_DIR , "go_ship_clean_ctd/reported/")
-    CONV_DIR = joinpath(root,"data/SectionExpocodes/")
+    CONV_DIR = joinpath(pkg_root,"data/SectionExpocodes/")
 
     return GRID_DIR, REP_DIR, CONV_DIR
 end
@@ -20,7 +25,7 @@ function loadSectionInfo(sectionName::String
     GOSHIP_DIR === nothing ? GOSHIP_DIR = readDefaults()["GOSHIP_DIR"] : nothing
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
 
-    SectionMaskFile = MatFile(joinpath(root,MASK_MATFILE))
+    SectionMaskFile = MatFile(joinpath(pkg_root,MASK_MATFILE))
     maskDict = jdict(get_mvariable(SectionMaskFile,"maskStruct"))
     sectionMaskName = maskNameFromSectionName(sectionName)
     mask = maskDict[sectionMaskName]
@@ -56,7 +61,7 @@ function loadSectionInfo(sectionName::String
 end
 
 function loadGLODAPVariable(GLODAP_VariableNames::String
-    ,GLODAP_expocodes::Union{Vector{String},Vector{String15}}
+    ,GLODAP_expocodes::Union{AbstractString}
     ,GLODAP_DIR::Union{String,Nothing}=nothing
     ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
     # Loads multiple variables from GLODAP, for a number of cruises
@@ -101,7 +106,7 @@ end
 function loadGLODAPVariable(GLODAP_VariableName::String
     ,GLODAP_DIR::Union{String,Nothing}=nothing
     ;GLODAP_FILENAME::Union{String,Nothing}=nothing
-    ,GLODAP_expocode::Union{String,String15,Nothing} = nothing)
+    ,GLODAP_expocode::Union{AbstractString,Nothing} = nothing)
     # Loads a single variable from GLODAP, for either a given expocode or the 
     # entirety of the GLODAP dataset.
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
@@ -129,7 +134,7 @@ end
 
 function loadGLODAPvariables(GLODAP_VariableNames::Vector{String}
     ,GLODAP_DIR::Union{String,Nothing}=nothing
-    ,GLODAP_expocode::Union{String,String15,Nothing}=nothing
+    ,GLODAP_expocode::Union{AbstractString,Nothing}=nothing
     ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
     # Loads multiple variables from GLODAP, for eiher a single cruise, or the 
     # entire GLODAP dataset
@@ -164,8 +169,8 @@ end
 function load_glodap_vars(GLODAP_VariableNames::Vector{String}
     ,GLODAP_DIR::Union{String,Nothing}=nothing
     ;GLODAP_FILENAME::Union{String,Nothing}=nothing
-    ,GLODAP_expocodes::Union{Vector{String},Vector{String15},Nothing}=nothing
-    ,GLODAP_expocode::Union{String,String15,Nothing}=nothing)
+    ,GLODAP_expocodes::Union{Vector{AbstractString},Nothing}=nothing
+    ,GLODAP_expocode::Union{AbstractString,Nothing}=nothing)
     # We can't use multiple dispatch with keyword arguments, so I'm going to put
     # this wrapper around loadGLODAPVariables to sort the issue. This function 
     # will allow you to load either a single or multiple variables for a single 
@@ -186,64 +191,57 @@ function load_glodap_vars(GLODAP_VariableNames::Vector{String}
     return variables
 end
 
-function hasDataFlags(variableName::String)
+# function hasDataFlags(variableName::String)
+function has_dataflags(varname::String)
     # Check whether we are gridding a varible which has flagged data
-    flaggedVariables = ["G2aou","G2c13","G2c14","G2ccl4","G2cfc113","G2cfc11"
+    flagged_vars = ["G2aou","G2c13","G2c14","G2ccl4","G2cfc113","G2cfc11"
             ,"G2cfc12","G2chla","G2doc","G2fco2","G2h3","G2he3","G2neon"
             ,"G2nitrate","G2nitrite","G2o18","G2oxygen","G2phosphate"
             ,"G2phtsinsitutp","G2salinity","G2sf6","G2silicate","G2talk"
             ,"G2tco2","G2tdn","G2toc"]
 
-    if variableName in flaggedVariables; return true 
-    else; return false 
-    end
+    return varname in flagged_vars
 end
 
-function removeFlaggedData(variable::Vector{Float64}, variable_fFlag::Vector{Float64})
+"""
+If we have data with flags of 2, return just those. Else, return data flagged as 
+zero
+"""
+function rm_flagged_data(input_var::AbstractVector{<:Real}, variablef_flag::AbstractVector{<:Real}, flag_val::Int64=2)
     # Remove data which has been flagged as being bad
-    outputVar = copy(variable)
-    outputVar[variable_fFlag .!= 2] .= NaN
-    if length(filter(!isnan,outputVar)) == 0
-        outputVar = copy(variable)
-        goodIdx = [x==0 || x==2 for x in variable_fFlag]
-        outputVar[goodIdx.==0] .= NaN
-    end
+    cleaned_var = copy(input_var) # Copy the variable
 
-    return outputVar
+    mask = [flag == flag_val ? 1 : 0 for flag in variablef_flag] # Create a mask of the flags
+    if sum(mask) > 0
+        cleaned_var[mask .== 0] .= NaN # Set the anything that isn't good to NaN
+        return cleaned_var
+    else
+        return rm_flagged_data(input_var, variablef_flag, 0)
+    end
 end
 
-function findGLODAPtco2Adjustment(;GLODAP_AdjTable::String="AdjustmentTable.csv"
-                                 ,expocode::Union{String,String15})
+function adjust_tco2(adj_table::String="AdjustmentTable.csv" ,expocode::AbstractString)::Float64
     # Adjust tCO2 using the GLODAP adjustment table
     
-    # This will check whether the expocode we are looking at is in Jens Muller's 
-    # recommended adjustments and adjust up here.
-    JensList = ["316N19941201","316N19950124","316N19950310","316N19950423",
-    "316N19950611","316N19950715","316N19950829","316N19951111","316N19951202"]
+    adj_table = joinpath(pkg_root,"data",adj_table)
 
-    if expocode in JensList
-        println("Expocode in Jens Muller's recommended adjustment list, returning 1.7")
-        println("This is temporary behaviour until the next GLODAP update.")
-        return 1.7
-    end
+    df = CSV.read(adj_table,DataFrame)
 
-    GLODAP_AdjTable = joinpath(root,"data",GLODAP_AdjTable)
+    expocodes = df[!,"cruise_expocode"]
+    tco2_offsets = df[!,"tco2_adj"]
 
-    tableCSV = CSV.read(GLODAP_AdjTable,DataFrame)
-
-    expocodeTable = tableCSV[!,"cruise_expocode"]
-    tco2AdjTable = tableCSV[!,"tco2_adj"]
-
-    if length(findall(expocodeTable .== expocode)) == 0
-        println("No adjustment found, returning 0.0")
+    idx = findfirst(expocodes .== expocode)
+    if isnothing(idx)
+        @info("No DIC adjustment found")
         return 0.0
     end
 
-    adjustment = tco2AdjTable[findall(expocodeTable .== expocode)][1]
-    if adjustment < -665
-        adjustment = 0.0
+    offset = tco2_offsets[idx]
+    if offset < -665
+        return 0.0
     end
-    return adjustment
+
+    return offset
 end
 
 function expocodeFromG2cruise(;GLODAP_DIR::Union{String,Nothing}=nothing
