@@ -53,3 +53,7 @@ end
 
     @test sum(mask) == 322623
 end
+
+@testset "load_glodap_vars" begin
+    # TODO
+end

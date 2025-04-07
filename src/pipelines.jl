@@ -1,3 +1,8 @@
+using DIVAnd
+
+include("./data_loading.jl")
+include("./simple_functionality.jl")
+
 function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,GOSHIP_DIR::Union{String,Nothing}=nothing
                             ,MASK_MATFILE::Union{String,Nothing}=nothing
@@ -396,4 +401,125 @@ function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     return griddedVarEasyPipeline
 end
 
+struct GriddedCruise
+    expocode::String
+    section_name::String
+    gridding::String
+    varname::String
+    horz_coordinate::String
 
+    horz_grid::Vector{Real}
+    vert_grid::Vector{Real}
+    mask::Matrix{Bool}
+    gridded_data::Matrix{Float64}
+
+end
+
+function fit_lengths(
+    vars::DataFrame,
+    data_residual::Vector{Float64},
+    pr_grid::Vector{Real}, 
+    search_z_func::Function
+)::Tuple{Vector{Float64}, Vector{Float64}}
+    @info "Computing correlation lengths: horizontal"
+    _x = (vars[!, "G2longitude"], vars[!, "G2latitude"], vars[!, "G2pressure"])
+    lenx, dbinfo = fithorzlen(_x, data_residual, pr_grid, searchz=search_z_func)
+
+    @info "Computing correlation lengths: vertical"
+    lenz, dbinfo = fitvertlen(
+        _x, 
+        data_residual, 
+        pr_grid,
+        searchz=search_z_func, 
+        limitfun= (z, len) -> max(min(len, 1000), 10)
+)
+
+    return lenx, lenz
+end
+
+
+
+function grid_cruise(
+    expocode::String,
+    section_name::String,
+    varname::String,
+    gridding::String="isobaric",
+)::GriddedCruise
+
+    @info "Gridding cruise $expocode for section $section_name with variable $varname using $gridding gridding method."
+    check_gridding_vars(gridding,"scalar")
+
+    @info "Loading section information for $section_name"
+    ll_grid, pr_grid, mask, horz_coordinate = load_coords_and_mask(section_name)
+
+    G2horz_coord = "G2$horz_coordinate"
+
+    secondary_horz_coord = horz_coordinate == "longitude" ? "G2latitude" : "G2longitude"
+
+    @info "Loading GLODAP data for $expocode, variables $varname, $G2horz_coord, G2pressure"
+    vars = load_glodap_vars(
+        [varname,"G2pressure",G2horz_coord, secondary_horz_coord],
+        expocode,
+        "/Users/u1166368/GLODAP/GLODAPv2.2023_Merged_Master_File.csv"
+    )
+    
+    var = vars[!, varname]
+    pr_vals = vars[!, "G2pressure"]
+    ll_vals = vars[!, G2horz_coord]
+
+    var_mean, var_anom = remove_scalar_mean(var)
+
+    pmn = ones(size(mask)), ones(size(mask))
+
+    @info "Performing initial (long correlation) DIVAnd fitting"
+    fi, s = DIVAndrun(mask, pmn, (ndgrid(ll_grid, pr_grid)), (ll_vals, pr_vals), 
+                      var_anom, (200,200), 0.1)
+
+                      
+    data_residual = DIVAnd_residual(s, fi)
+
+    
+    lenx, lenz = fit_lengths(vars, data_residual, pr_grid, search_z_func)
+    
+    @info "Performing second (computed correlation) DIVAnd fitting on residuals"
+
+    lenx = repeat(lenx, 1, length(ll_grid))'
+    lenz = repeat(lenz, 1, length(ll_grid))'
+
+    #= 
+    *** NEED TO CORRECTLY FIT THIS FROM THE DATA ***
+    =#
+    pmn = ones(size(mask)), 100 * ones(size(mask))
+
+    fi2, s2 = DIVAndrun(mask, pmn, (ndgrid(ll_grid, pr_grid)), (ll_vals, pr_vals), 
+    data_residual, (lenz,lenx), 0.1)
+    
+    gridded_data = var_mean .+ fi .+ fi2
+    
+    return GriddedCruise(
+        expocode,
+        section_name,
+        gridding,
+        varname,
+        horz_coordinate,
+        ll_grid,
+        pr_grid,
+        mask,
+        gridded_data'
+        )
+        
+    end
+    
+function search_z_func(z)
+    # If z < 500, then set searchz to 50. 500 < z < 1000, set to 100.
+    # 1000 < z < 2000, set to 250. z > 2000, set to 1000
+    if z < 500
+        return 50
+    elseif z < 1000
+        return 100
+    elseif z < 2000
+        return 250
+    else
+        return 1000
+    end
+end

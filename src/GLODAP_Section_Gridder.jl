@@ -4,7 +4,7 @@ root = dirname(@__FILE__)[1:end-4]
 # Little bit hacky but it's probably easier to use the package root rather than 
 # src.
 
-using MATLAB
+# using MATLAB
 using DIVAnd
 using CSV
 using DelimitedFiles

@@ -41,35 +41,25 @@ include("../src/simple_functionality.jl")
 end
 
 @testset "check_gridding_vars Tests" begin
-    horz_coord = "longitude"
     gridding = "isobaric"
     mean_val = "horzMean"
 
-    @test isnothing(check_gridding_vars(horz_coord, gridding, mean_val))
+    @test isnothing(check_gridding_vars( gridding, mean_val))
 
-    horz_coord = "latitude"
     gridding = "isopycnic"
     mean_val = "scalar"
 
-    @test isnothing(check_gridding_vars(horz_coord, gridding, mean_val))
+    @test isnothing(check_gridding_vars( gridding, mean_val))
 
-    horz_coord = "invalid"
-    gridding = "isobaric"
+    gridding = "isotonic"
     mean_val = "horzMean"
 
-    @test_throws InvalidHorzCoordError check_gridding_vars(horz_coord, gridding, mean_val)
+    @test_throws InvalidGriddingError check_gridding_vars( gridding, mean_val)
 
-    horz_coord = "longitude"
-    gridding = "invalid"
-    mean_val = "horzMean"
-
-    @test_throws InvalidGriddingError check_gridding_vars(horz_coord, gridding, mean_val)
-
-    horz_coord = "longitude"
     gridding = "isobaric"
     mean_val = "invalid"
 
-    @test_throws InvalidMeanValueError check_gridding_vars(horz_coord, gridding, mean_val)
+    @test_throws InvalidMeanValueError check_gridding_vars( gridding, mean_val)
 end
 
 @testset "to_mask_name Tests" begin

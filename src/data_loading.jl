@@ -69,8 +69,9 @@ function loadSectionInfo(sectionName::String
     return ll_grid, pr_grid, mask
 end
 
+
 function load_coords_and_mask(section_name::String,
-                              )::Tuple{Vector{Real},Vector{Real},Matrix{Bool}}
+                              )::Tuple{Vector{Real},Vector{Real},Matrix{Bool},String}
     # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
     # This needs extending so that a user can add their own section if they want
     # one.
@@ -79,13 +80,12 @@ function load_coords_and_mask(section_name::String,
     It looks like we can load a bunch of these as netCDF's from here:
     https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1
 
-    Maybe this can let us rip the matlab backend out of this & start fixing the 
-    gridding code.
+    TODO: Refactor to return a struct
     =#
     
     ds = NCDataset(joinpath(pkg_root,"data","masks","$section_name.nc"))
 
-    horz_coord = first(filter(x -> x != "pressure", dimnames(ds)))
+    horz_coord = ds.attrib["horz_coord"] # Hardcoded this into the files - will break otherwise
 
     ll_grid = ds[horz_coord][:]
     pr_grid = ds["pressure"][:]
@@ -102,14 +102,43 @@ function load_coords_and_mask(section_name::String,
         # or we might run into problems in the Pacific
     end
 
-    return ll_grid, pr_grid, mask
+    return ll_grid, pr_grid, mask, horz_coord
 end
 
 
-function loadGLODAPVariable(GLODAP_VariableNames::String
-    ,GLODAP_expocodes::Union{AbstractString}
-    ,GLODAP_DIR::Union{String,Nothing}=nothing
-    ,GLODAP_FILENAME::Union{String,Nothing}=nothing)
+function load_glodap_vars(
+    varnames::AbstractVector{<:AbstractString},
+    expocode::AbstractString,
+    glodap_db::String,
+    )::DataFrame
+    # Loads multiple variables from GLODAP, for a paricular cruise
+
+    # Calling it `glodap_db` is misleading but useful - it's just a big CSV, but
+    # we want to keep a 'session' open, ie. pass the DataFrame around so we don't
+    # have to keep reading it in.
+    
+
+    df = CSV.read(glodap_db,DataFrame)
+
+    append!(varnames,["G2expocode","G2cruise"])
+    varnames = unique(varnames)
+
+    df = select(df, (varnames...))
+
+    df = subset(df, :G2expocode => ByRow(==(expocode,)))
+
+    df = select(df, Not(:G2expocode,:G2cruise))
+
+    return df
+
+end
+
+function loadGLODAPVariable(
+    GLODAP_VariableNames::String,
+    GLODAP_expocodes::Union{AbstractString},
+    GLODAP_DIR::Union{String,Nothing}=nothing,
+    GLODAP_FILENAME::Union{String,Nothing}=nothing,
+    )
     # Loads multiple variables from GLODAP, for a number of cruises
 
     GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing

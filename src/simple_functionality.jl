@@ -1,6 +1,7 @@
 """
 # This file contains simple functions that are used throughout the codebase.
 """
+# 
 using Base.Threads
 using Statistics
 using Dates
@@ -154,9 +155,6 @@ function calc_decimal_year(year::AbstractVector{<:Real},month::AbstractVector{<:
     
 end
 
-struct InvalidHorzCoordError <: Exception
-    msg::String
-end
 
 struct InvalidGriddingError <: Exception
     msg::String
@@ -172,13 +170,8 @@ Enforce we are using variables within our enumeration of allowed values.
 
 ? Replace these with enums?
 """
-function check_gridding_vars(horz_coord::String,gridding::String,mean_val::String)
+function check_gridding_vars(gridding::String,mean_val::String)
     # Checks that we are using defined variables. 
-    if !(horz_coord in Set(["longitude","latitude"]))
-        throw(InvalidHorzCoordError(
-            "\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\""
-            ))
-    end
 
     if !(gridding in Set(["isobaric","isopycnic"]))
         throw(InvalidGriddingError(
@@ -192,3 +185,4 @@ function check_gridding_vars(horz_coord::String,gridding::String,mean_val::Strin
         ))
     end
 end
+

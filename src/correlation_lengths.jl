@@ -22,14 +22,15 @@ function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
     return scaleFactor * horzLengthDegrees
 end
 
-function calcCorrLengths(variable::Vector{Float64}
-                                ;obsLat::Vector{Float64}
-                                ,obsLon::Vector{Float64}
-                                ,obsPres::Vector{Float64}
-                                ,presGrid::Vector{Float64}
-                                ,pressureStepNumber::Integer=10
-                                ,verticalSearchRange::Number=100
-                                ,lenxFactor::Number=1)
+function calcCorrLengths(;variable::Vector{Float64},
+                        obsLat::Vector{Float64},
+                        obsLon::Vector{Float64},
+                        obsPres::Vector{Float64},
+                        presGrid::Vector{Float64},
+                        pressureStepNumber::Integer=10,
+                        verticalSearchRange::Number=100,
+                        lenxFactor::Number=1,
+    )
     # Calculate vertical and horizontal correlation lengths
     goodIdx = non_nan_indices(variable)
 
