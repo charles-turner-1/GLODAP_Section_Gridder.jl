@@ -1,6 +1,7 @@
 using DIVAnd
 
 include("./data_loading.jl")
+include("./correlation_lengths.jl")
 include("./simple_functionality.jl")
 
 function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
@@ -407,6 +408,9 @@ struct GriddedCruise
     gridding::String
     varname::String
     horz_coordinate::String
+    obs_ll::Vector{Real}
+    obs_pr::Vector{Real}
+    residuals::Vector{Float64}
 
     horz_grid::Vector{Real}
     vert_grid::Vector{Real}
@@ -415,30 +419,42 @@ struct GriddedCruise
 
 end
 
-function fit_lengths(
-    vars::DataFrame,
-    data_residual::Vector{Float64},
-    pr_grid::Vector{Real}, 
-    search_z_func::Function
-)::Tuple{Vector{Float64}, Vector{Float64}}
-    @info "Computing correlation lengths: horizontal"
-    _x = (vars[!, "G2longitude"], vars[!, "G2latitude"], vars[!, "G2pressure"])
-    lenx, dbinfo = fithorzlen(_x, data_residual, pr_grid, searchz=search_z_func)
-
-    @info "Computing correlation lengths: vertical"
-    lenz, dbinfo = fitvertlen(
-        _x, 
-        data_residual, 
-        pr_grid,
-        searchz=search_z_func, 
-        limitfun= (z, len) -> max(min(len, 1000), 10)
-)
-
-    return lenx, lenz
-end
 
 
+"""
+grid_cruise(expocode::String, section_name::String, varname::String, gridding::String="isobaric")::GriddedCruise
 
+Grids cruise data for a specified section, variable, and gridding method using the DIVAnd interpolation framework.
+
+# Arguments
+- `expocode::String`: The unique identifier for the cruise.
+- `section_name::String`: The name of the section to be gridded.
+- `varname::String`: The variable name to be gridded (e.g., temperature, salinity).
+- `gridding::String="isobaric"`: The gridding method to use. Defaults to "isobaric".
+
+# Returns
+- `GriddedCruise`: A structured object containing the gridded data and associated metadata.
+
+# Workflow
+1. Logs the gridding process and validates the gridding method.
+2. Loads section information, including coordinates and masks.
+3. Loads GLODAP data for the specified cruise and variables.
+4. Removes the scalar mean from the variable data.
+5. Performs an initial DIVAnd fitting with long correlation lengths.
+6. Computes residuals and fits correlation lengths based on the data.
+7. Performs a second DIVAnd fitting using computed correlation lengths.
+8. Combines the mean, first fit, and second fit to produce the final gridded data.
+9. Returns a `GriddedCruise` object containing the gridded data, residuals, and metadata.
+
+# Notes
+- The function assumes the availability of GLODAP data at the specified file path.
+- The correlation lengths for the second DIVAnd fitting are computed dynamically from the data.
+- The `pmn` parameter for the second fitting is currently hardcoded and may require adjustment.
+
+# Example
+```julia
+gridded_cruise = grid_cruise("33RO20230101", "A05", "G2theta")
+"""
 function grid_cruise(
     expocode::String,
     section_name::String,
@@ -495,6 +511,10 @@ function grid_cruise(
     data_residual, (lenz,lenx), 0.1)
     
     gridded_data = var_mean .+ fi .+ fi2
+
+    data_residual2 = DIVAnd_residual(s2, fi2)
+
+    residuals = data_residual .+ data_residual2
     
     return GriddedCruise(
         expocode,
@@ -502,6 +522,9 @@ function grid_cruise(
         gridding,
         varname,
         horz_coordinate,
+        ll_vals,
+        pr_vals,
+        residuals,
         ll_grid,
         pr_grid,
         mask,
@@ -510,16 +533,3 @@ function grid_cruise(
         
     end
     
-function search_z_func(z)
-    # If z < 500, then set searchz to 50. 500 < z < 1000, set to 100.
-    # 1000 < z < 2000, set to 250. z > 2000, set to 1000
-    if z < 500
-        return 50
-    elseif z < 1000
-        return 100
-    elseif z < 2000
-        return 250
-    else
-        return 1000
-    end
-end

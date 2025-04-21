@@ -186,3 +186,19 @@ function check_gridding_vars(gridding::String,mean_val::String)
     end
 end
 
+
+"""
+Takes a z value and returns a searchz value. This is used to determine the
+search distance for correlation length fitting
+"""
+function search_z_func(z)
+    if z < 500
+        return 50
+    elseif z < 1000
+        return 100
+    elseif z < 2000
+        return 250
+    else
+        return 1000
+    end
+end
