@@ -56,7 +56,28 @@ function grid_sigma_distance(sigma_grid::AbstractVector{Float64})::Vector{Float6
 end
 
 # function calcScaleFactors(verticalDistance::Vector,horizontalDistance::Vector ;printScales=true)
-function calc_scale_factors(vert_dist::Vector{<:Real}, horz_dist::Vector{<:Real} ; print_scales=true)::Tuple{Vector,Vector}
+"""
+    calc_scale_factors(vert_dist::Vector{<:Real}, horz_dist::Vector{<:Real}; print_scales=true) -> ScaleFactors
+
+Calculate vertical and horizontal scale factors based on the provided vertical and horizontal distances.
+
+# Arguments
+- `vert_dist::Vector{<:Real}`: A vector of vertical distances.
+- `horz_dist::Vector{<:Real}`: A vector of horizontal distances.
+- `print_scales::Bool` (optional): If `true`, prints the mean horizontal and vertical scale factors. Defaults to `true`.
+
+# Returns
+- `ScaleFactors`: A custom type containing the calculated vertical and horizontal scale factors as arrays.
+
+# Notes
+- The function computes the scale factors as the reciprocal of the distances.
+- The `ndgrid` function is used to create grids of the input distances for computation.
+"""
+function calc_scale_factors(
+    vert_dist::Vector{<:Real},
+    horz_dist::Vector{<:Real};
+    print_scales=true
+)::ScaleFactors
     # Calculate vertical and horizontal scale factors, print them out (if desired)
     # and return them
     dP_grid, dL_grid = ndgrid(vert_dist, horz_dist)
@@ -66,5 +87,13 @@ function calc_scale_factors(vert_dist::Vector{<:Real}, horz_dist::Vector{<:Real}
         println("Horizontal scale factor: ", mean(scaleHorz))
         println("Vertical scale factor: ", mean(scaleVert))
     end
-    return scaleVert, scaleHorz
+    return ScaleFactors(scaleVert, scaleHorz)
+end
+
+"""
+Contains the scale factors for the vertical and horizontal distances
+"""
+struct ScaleFactors
+    vert::Vector{<:Real}
+    horz::Vector{<:Real}
 end

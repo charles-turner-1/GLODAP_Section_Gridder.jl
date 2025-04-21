@@ -110,7 +110,8 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     horzDist = grid_horz_dist(lat,lon,llGrid)
     vertDist = grid_vert_dist(prGrid)
 
-    scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
+    scales = calc_scale_factors(vertDist,horzDist)
+    scaleVert, scaleHorz = scales.vert, scales.horz
 
     lenxFactor = checkHorzLenFactor(expocode=expocode,variableName=variableName
                    ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
@@ -281,7 +282,8 @@ function gridSectionPipeline(;sectionName::String
         horzDist = grid_horz_dist(lat,lon,llGrid)
         vertDist = grid_vert_dist(prGrid)
 
-        scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
+        scales = calc_scale_factors(vertDist,horzDist)
+        scaleVert, scaleHorz = scales.vert, scales.horz
 
         lenxFactor = checkHorzLenFactor(expocode=expocode[2],variableName=variableName
                    ,griddingType=gridding,HORZLEN_EXCEPTIONS=HORZLEN_EXCEPTIONS)
@@ -369,7 +371,8 @@ function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     horzDist = grid_horz_dist(lat,lon,llGrid)
     vertDist = grid_vert_dist(prGrid)
 
-    scaleVert, scaleHorz = calc_scale_factors(vertDist,horzDist)
+    scales = calc_scale_factors(vertDist,horzDist)
+    scaleVert, scaleHorz = scales.vert, scales.horz
 
     lenxFactor = horzLenFactor
 
