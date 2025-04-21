@@ -466,7 +466,9 @@ function grid_cruise(
     check_gridding_vars(gridding,"scalar")
 
     @info "Loading section information for $section_name"
-    ll_grid, pr_grid, mask, horz_coordinate = load_coords_and_mask(section_name)
+    section_info = load_section_info(section_name)
+
+    ll_grid, pr_grid, section_mask, horz_coordinate = section_info.ll_grid, section_info.pr_grid, section_info.mask, section_info.horz_coord
 
     G2horz_coord = "G2$horz_coordinate"
 

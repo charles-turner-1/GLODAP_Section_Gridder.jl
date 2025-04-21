@@ -30,6 +30,7 @@ function loadSectionInfo(sectionName::String
     Maybe this can let us rip the matlab backend out of this & start fixing the 
     gridding code.
     =#
+    throw(ErrorException("This function is deprecated, use load_section_info instead"))
 
     GOSHIP_DIR = something(GOSHIP_DIR,readDefaults()["GOSHIP_DIR"])
     MASK_MATFILE = something(MASK_MATFILE,readDefaults()["MASK_MATFILE"])
@@ -70,18 +71,34 @@ function loadSectionInfo(sectionName::String
 end
 
 
-function load_coords_and_mask(section_name::String,
-                              )::Tuple{Vector{Real},Vector{Real},Matrix{Bool},String}
-    # Loads the grid data for the section, ie. lat/lon grid, pressure grid, mask.
-    # This needs extending so that a user can add their own section if they want
-    # one.
-    #=
-    ***
-    It looks like we can load a bunch of these as netCDF's from here:
-    https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1
+"""
+    load_section_info(section_name::String)::SectionInfo
 
-    TODO: Refactor to return a struct
-    =#
+Loads the grid data for a specified section, including latitude/longitude grid, pressure grid, and mask.
+
+# Arguments
+- `section_name::String`: The name of the section for which the grid data is to be loaded.
+
+# Returns
+- `Tuple{Vector{Real}, Vector{Real}, Matrix{Bool}, String}`: A tuple containing:
+  - `ll_grid::Vector{Real}`: The latitude/longitude grid.
+  - `pr_grid::Vector{Real}`: The pressure grid.
+  - `mask::Matrix{Bool}`: The mask indicating valid grid points.
+  - `horz_coord::String`: The horizontal coordinate attribute.
+
+# Notes
+- This function currently assumes that the grid data is stored in NetCDF files located in the `data/masks` directory.
+- The horizontal coordinate attribute (`horz_coord`) is hardcoded into the NetCDF files and must be present for the function to work.
+- For Pacific basin sections, longitudes greater than 180 are adjusted to match GLODAP and GO-SHIP conventions.
+- The function could be extended to allow users to add custom sections.
+- Refactoring to return a struct instead of a tuple is recommended for better usability.
+
+# Data Source
+Grid data can be downloaded as NetCDF files from the following Zenodo link:
+[https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1](https://zenodo.org/records/13315689/files/gridded_netcdf.zip?download=1)
+"""
+function load_section_info(section_name::String,
+                              )::SectionInfo
     
     ds = NCDataset(joinpath(pkg_root,"data","masks","$section_name.nc"))
 
@@ -102,7 +119,27 @@ function load_coords_and_mask(section_name::String,
         # or we might run into problems in the Pacific
     end
 
-    return ll_grid, pr_grid, mask, horz_coord
+    return SectionInfo(
+        ll_grid, pr_grid, mask, horz_coord
+    )
+end
+
+"""
+    SectionInfo
+
+A struct representing information about a section, including its grid, pressure levels, mask, and horizontal coordinate.
+
+# Fields
+- `ll_grid::Vector{Real}`: The latitude/longitude grid for the section.
+- `pr_grid::Vector{Real}`: The pressure grid for the section.
+- `mask::Matrix{Bool}`: A boolean mask indicating valid grid points.
+- `horz_coord::String`: The horizontal coordinate attribute (e.g., "longitude" or "latitude").
+"""
+struct SectionInfo
+    ll_grid::Vector{Real}
+    pr_grid::Vector{Real}
+    mask::Matrix{Bool}
+    horz_coord::String
 end
 
 
@@ -241,32 +278,10 @@ function loadGLODAPvariables(GLODAP_VariableNames::Vector{String}
 end
 
 
-function load_glodap_vars(GLODAP_VariableNames::Vector{String}
-    ,GLODAP_DIR::Union{String,Nothing}=nothing
-    ;GLODAP_FILENAME::Union{String,Nothing}=nothing
-    ,GLODAP_expocodes::Union{Vector{AbstractString},Nothing}=nothing
-    ,GLODAP_expocode::Union{AbstractString,Nothing}=nothing)
-    # We can't use multiple dispatch with keyword arguments, so I'm going to put
-    # this wrapper around loadGLODAPVariables to sort the issue. This function 
-    # will allow you to load either a single or multiple variables for a single 
-    # cruise, multiple cruises, or the whole GLODAP dataset.
-
-    # COME BACK AND FIX THIS AT SOME POINT BECAUSE ITS NOT VERY CLEAN
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-
-    if GLODAP_expocodes !== nothing # Structuring logic this way will load all expocodes if both are passed
-        println("GLODAP_expocodes is a vector")
-        variables = loadGLODAPvariables(GLODAP_VariableNames,GLODAP_DIR
-                                       ,GLODAP_expocodes,GLODAP_FILENAME)
-    else
-        println("GLODAP_expocode is a string")
-        variables = loadGLODAPvariables(GLODAP_VariableNames,GLODAP_DIR
-                                       ,GLODAP_expocode,GLODAP_FILENAME)
-    end
-    return variables
-end
-
 # function hasDataFlags(variableName::String)
+"""
+# Check whether we are gridding a varible which has flagged data - more or less a lookup table
+"""
 function has_dataflags(varname::String)
     # Check whether we are gridding a varible which has flagged data
     flagged_vars = ["G2aou","G2c13","G2c14","G2ccl4","G2cfc113","G2cfc11"
@@ -295,6 +310,21 @@ function rm_flagged_data(input_var::AbstractVector{<:Real}, variablef_flag::Abst
     end
 end
 
+"""
+    adjust_tco2(;expocode::AbstractString,adj_table::String="AdjustmentTable.csv" )::Float64
+Adjust tCO2 using the GLODAP adjustment table
+# Arguments
+- `expocode::AbstractString`: The expocode of the cruise for which the tCO2 adjustment is to be made.
+- `adj_table::String`: The name of the adjustment table file (default is "AdjustmentTable.csv").
+
+# Returns
+- `Float64`: The tCO2 adjustment value for the specified expocode.
+
+# Notes
+- The function reads the adjustment table from a CSV file located in the `data` directory of the package.
+- TODO: Allow the user to pass in a custom adjustment table, or their own 
+  adjustment values.
+"""
 function adjust_tco2(;expocode::AbstractString,adj_table::String="AdjustmentTable.csv" )::Float64
     # Adjust tCO2 using the GLODAP adjustment table
     
