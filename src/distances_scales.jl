@@ -1,58 +1,69 @@
 # function gridHorzDistance(GLODAP_latitudes::Vector{Float64} ,GLODAP_longitudes::Vector{Float64} ,latlonGrid)
-function grid_horz_dist(GLODAP_latitudes::AbstractVector{<:Real}, GLODAP_longitudes::AbstractVector{<:Real}, latlonGrid)
+function grid_horz_dist(
+    GLODAP_latitudes::AbstractVector{<:Real},
+    GLODAP_longitudes::AbstractVector{<:Real}, 
+    ll_grid::AbstractVector{<:Real},
+)::AbstractVector{<:AbstractFloat}
     # Compute the mean distance between each station in a cruise
 
     # This needs to be completely redone. What we want is to somehow identify 
     # each unique station 
 
-    uniqueLocations = unique(zip(GLODAP_latitudes, GLODAP_longitudes))
-    lonRange = maximum(GLODAP_longitudes) - minimum(GLODAP_longitudes)
-    latRange = maximum(GLODAP_latitudes) - minimum(GLODAP_latitudes)
-    lonRange < latRange ? sort!(uniqueLocations, by=x -> x[1]) :
-    sort!(uniqueLocations, by=x -> x[2])
-    GLODAP_longitudes = [uniqueLocations[i][1] for i = 1:length(uniqueLocations)]
-    GLODAP_latitudes = [uniqueLocations[i][2] for i = 1:length(uniqueLocations)]
+    uniq_locs = unique(zip(GLODAP_latitudes, GLODAP_longitudes))
 
-    dLon = central_diff(GLODAP_longitudes)
-    dLat = central_diff(GLODAP_latitudes)
 
-    dLat_m = dLat * 111.2
-    dLon_m = dLon * 111.2 .* cos.(GLODAP_latitudes * pi / 180)
+    lon_range = maximum(GLODAP_longitudes) - minimum(GLODAP_longitudes)
+    lat_range = maximum(GLODAP_latitudes) - minimum(GLODAP_latitudes)
+    lon_range < lat_range ?   # Probably redundant, look into removing
+        sort!(uniq_locs, by=x -> x[1]) : 
+        sort!(uniq_locs, by=x -> x[2])
 
-    horzDist_kilometres = sum(sqrt.(dLat_m .^ 2 + dLon_m .^ 2)) / length(latlonGrid)
-    horzDist_kilometres = fill(horzDist_kilometres, size(latlonGrid))
+    GLODAP_longitudes = [uniq_locs[i][1] for i = 1:length(uniq_locs)]
+    GLODAP_latitudes = [uniq_locs[i][2] for i = 1:length(uniq_locs)]
 
-    return horzDist_kilometres
+    d_lon = central_diff(GLODAP_longitudes)
+    d_lat = central_diff(GLODAP_latitudes)
+
+    d_lat_m = d_lat * 111.2
+    d_lon_m = d_lon * 111.2 .* cos.(GLODAP_latitudes * pi / 180)
+
+    horzdist_km = sum(sqrt.(d_lat_m .^ 2 + d_lon_m .^ 2)) / length(ll_grid)
+    horzdist_km = fill(horzdist_km, size(ll_grid))
+
+    return horzdist_km
 end
 
 # function gridVertDistance(pressureGrid ,GLODAP_pressures=nothing)
-function grid_vert_dist(pgrid)::Vector{Int32}
-    # Because GO-SHIP Easy Ocean grids everything onto a 10m vertical grid, all
-    # we need to do is return a distance of 10m
-    vertDist_metres = fill(10, size(pgrid))
-    return vertDist_metres
+"""
+    grid_vert_dist(pgrid::Vector{<:Real}, GLODAP_pressures=nothing) -> Vector{<:Integer}
+Calculate the vertical distance for a given pressure grid. GO-SHIP Easy Ocean grids 
+everything onto a 10m vertical grid, so this function just returns a vector of 10s.
+
+Provided for consistency & convenience
+"""
+function grid_vert_dist(pgrid)::Vector{<:Integer}
+    return fill(10, size(pgrid))
 end
 
-# For some reason which escapes me, I can't type either of the grid___Distance
-# functions without breaking them. Something to understand
 
 # function createSigmaGrid(sigmaVals::Vector{Float64},numLevels::Int64=600)
-function create_sigma_grid(sigma_vals::AbstractVector{<:AbstractFloat}, numLevels::Int32=600)
+function create_sigma_grid(sigma_vals::AbstractVector{<:AbstractFloat}, numLevels::Integer=600)
     # Creates a 600 level (default) evenly spaced grid in density space
     sigma_vals = unique(sort(filter(!isnan, sigma_vals)))
-    sigmaStep = convert(Int64, ceil(length(sigma_vals) / numLevels))
-    sigmaGrid = sigma_vals[1:sigmaStep:end]
-    return sigmaGrid
+    step = convert(Int64, ceil(length(sigma_vals) / numLevels))
+    sigma_grid = sigma_vals[1:step end]
+    return sigma_grid
 end
 
 # function gridSigDistance(sigmaGrid::Vector{Float64})
-function grid_sigma_distance(sigma_grid::AbstractVector{Float64})::Vector{Float64}
-    # Work out the characteristic mean sigma grid distance. Could probably merge
-    # this with the previous function
-    sigmaMeanDist = mean(central_diff(sigma_grid))
-    sigmaMeanDist = fill(sigmaMeanDist, size(sigma_grid))
+function grid_sigma_distance(
+    sigma_grid::AbstractVector{<:AbstractFloat}
+)::Vector{<:AbstractFloat}
+    minval, maxval = extrema(sigma_grid)
+    mean_dist = (maxval - minval) / length(sigma_grid)
+    sigma_mean_dist = fill(mean_dist, size(sigma_grid))
 
-    return sigmaMeanDist
+    return sigma_mean_dist
 end
 
 # function calcScaleFactors(verticalDistance::Vector,horizontalDistance::Vector ;printScales=true)
