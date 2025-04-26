@@ -1,11 +1,12 @@
 """
 # This file contains simple functions that are used throughout the codebase.
 """
-# 
+
 using Base.Threads
 using Statistics
 using Dates
 
+include("./errs.jl")
 
 """
 Takes a longitude grid and a longitude value, transforms from [-180,180) to [0,360) based longitude coordinates.
@@ -153,15 +154,6 @@ function calc_decimal_year(year::AbstractVector{<:Real},month::AbstractVector{<:
 
     return year .+ ((doy .-1) ./ year_len)
     
-end
-
-
-struct InvalidGriddingError <: Exception
-    msg::String
-end
-
-struct InvalidMeanValueError <: Exception
-    msg::String
 end
 
 

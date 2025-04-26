@@ -39,7 +39,8 @@ function restoreDefaults()
     return nothing
 end
 
-function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
+# function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
+function list_masks(MASK_MATFILE::Union{String,Nothing}=nothing)
     # Reads the section mask file and returns the available masks.
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
     SectionMaskFile = MatFile(MASK_MATFILE) 
@@ -50,29 +51,36 @@ function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
     end
 end
 
-function listSectionExpocodes(sectionName::String
-                             ,expocodeDir::Union{String,Nothing}=nothing)
+# function listSectionExpocodes(sectionName::String ,expocodeDir::Union{String,Nothing}=nothing)
+function list_section_expocodes(
+    section_name::AbstractString,
+    expocode_dir::Union{AbstractString,Nothing}=nothing,
+)::DataFrame
     # Lists out all the expocodes of cruises occupying a given section
-    if expocodeDir === nothing
-        expocodes = joinpath(root,"data/SectionExpocodes",sectionName) * ".csv"
+    if expocode_dir === nothing
+        expocodes = joinpath(root,"data/SectionExpocodes","$sectionName.csv")
     else # Allow manual specification of expocodeDir so user can specify something weird if they want
-        expocodes = joinpath(expocodeDir,sectionName) * ".csv"
+        expocodes = joinpath(expocode_dir,"$sectionName.csv")
     end
     return CSV.read(expocodes,DataFrame)
 end
 
 
-function listAvailableGLODAPVariables(GLODAP_DIR::Union{String,Nothing}=nothing,
-                                      GLODAP_DATAFILE::Union{String,Nothing}=nothing)
+# function listAvailableGLODAPVariables(GLODAP_DIR::Union{String,Nothing}=nothing, GLODAP_DATAFILE::Union{String,Nothing}=nothing)
+function list_glodap_vars(
+    glodap_dir::Union{String,Nothing}=nothing,
+    glodap_datafile::Union{String,Nothing}=nothing
+)::Nothing
     # Lists all variables contained in GLODAP
 
-    GLODAP_DIR === nothing ? GLODAP_DIR = readDefaults()["GLODAP_DIR"] : nothing
-    GLODAP_DATAFILE === nothing ? GLODAP_DATAFILE = readDefaults()["GLODAP_FILENAME"] : nothing
+    glodap_dir === nothing ? glodap_dir = readDefaults()["GLODAP_DIR"] : nothing
+    glodap_datafile === nothing ? glodap_datafile = readDefaults()["GLODAP_FILENAME"] : nothing
 
-    GLODAP_DATAFILE = joinpath(GLODAP_DIR,GLODAP_DATAFILE)
-    GLODAP_Data = MatFile(GLODAP_DATAFILE)
-    println(" ");println("Available GLODAP variables:")
+    glodap_datafile = joinpath(glodap_dir,glodap_datafile)
+    GLODAP_Data = MatFile(GLODAP_DATAFILE) 
+    # Need to excise this & replace with reading the CSV headers or whatever
+    println("\nAvailable GLODAP variables:")
     for variable in variable_names(GLODAP_Data)
-        println(variable)
+        println("\t--> $variable")
     end
 end

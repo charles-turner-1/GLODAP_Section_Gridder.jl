@@ -76,25 +76,6 @@ function calcCorrLengths(;variable::Vector{Float64},
     return lenzSmthd, lenxKM
 end
 
-function corrLengthVectorToMatrix(lenX::Vector{Float64},lenZ::Vector{Float64}
-                                 ,presGrid::Vector{Float64}, llGrid::Vector{Float64})
-    # Take the correlation length vectors, and turn them into matrices the same 
-    # size as our mask
-    sz = (length(presGrid),length(llGrid))
-    lenXgrid = fill(1.0,sz)
-    lenZgrid = fill(1.0,sz)
-    for i = 1:length(llGrid)
-        lenXgrid[:,i] = lenX
-        lenZgrid[:,i] = lenZ
-    end
-    lenXgrid = convert(Matrix{Float64},lenXgrid)
-    lenZgrid = convert(Matrix{Float64},lenZgrid)
-
-    lenZgrid = min.(lenZgrid,1000)
-
-    return lenZgrid, lenXgrid
-end
-
 function calcDensityCorrLengths(variable::Vector{Float64}
                                 ;obsLat::Vector{Float64}
                                 ,obsLon::Vector{Float64}

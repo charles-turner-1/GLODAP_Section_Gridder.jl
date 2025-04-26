@@ -1,3 +1,4 @@
+include("./structs.jl")
 # function gridHorzDistance(GLODAP_latitudes::Vector{Float64} ,GLODAP_longitudes::Vector{Float64} ,latlonGrid)
 function grid_horz_dist(
     GLODAP_latitudes::AbstractVector{<:Real},
@@ -47,11 +48,12 @@ end
 
 
 # function createSigmaGrid(sigmaVals::Vector{Float64},numLevels::Int64=600)
-function create_sigma_grid(sigma_vals::AbstractVector{<:AbstractFloat}, numLevels::Integer=600)
-    # Creates a 600 level (default) evenly spaced grid in density space
-    sigma_vals = unique(sort(filter(!isnan, sigma_vals)))
-    step = convert(Int64, ceil(length(sigma_vals) / numLevels))
-    sigma_grid = sigma_vals[1:step end]
+function create_sigma_grid(sigma_vals::AbstractVector{<:Real}, n_int::Integer=600)
+    # Creates an adaptive grid in sigma space, where we split the sigma space into
+    # n_int intervals. The sigma space is defined by the minimum and maximum values
+    sigma_vals = filter(!isnan, sigma_vals) |> unique |> sort
+    step = Int(floor(length(sigma_vals) / n_int))
+    sigma_grid = sigma_vals[1:step:end]
     return sigma_grid
 end
 
@@ -99,12 +101,4 @@ function calc_scale_factors(
         println("Vertical scale factor: ", mean(scaleVert))
     end
     return ScaleFactors(scaleVert, scaleHorz)
-end
-
-"""
-Contains the scale factors for the vertical and horizontal distances
-"""
-struct ScaleFactors
-    vert::Vector{<:Real}
-    horz::Vector{<:Real}
 end
