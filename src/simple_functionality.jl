@@ -46,7 +46,7 @@ function central_diff(v::AbstractVector{<:Real})::AbstractVector{<:Real}
     dv_fwds  = diff(v)
     dv_bwds  = reverse(-diff(reverse(v)))
     dx = Vector{AbstractFloat}(undef,length(v))
-    dx[1] = dvF[1]; dx[end] = dvB[end]
+    dx[1] = dv_fwds[1]; dx[end] = dv_bwds[end]
     dx[2:end-1] = (dv_fwds[1:end-1] + dv_bwds[2:end]) / 2
     return dx
 end
