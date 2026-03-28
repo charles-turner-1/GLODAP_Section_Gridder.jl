@@ -473,7 +473,7 @@ function grid_cruise(
 
     var_mean, var_anom = remove_scalar_mean(var)
 
-    pmn = ones(size(section_mask)), ones(size(section_mask))
+    pmn = ones(size(section_mask)), 0.1* ones(size(section_mask))
 
     @info "Performing initial (long correlation) DIVAnd fitting"
     fi, s = DIVAndrun(section_mask, pmn, (ndgrid(ll_grid, pr_grid)), (ll_vals, pr_vals), 
@@ -493,9 +493,9 @@ function grid_cruise(
     #= 
     *** NEED TO CORRECTLY FIT THIS FROM THE DATA ***
     =#
-    pmn = ones(size(mask)), 100 * ones(size(mask))
+    pmn = ones(size(section_mask)), 100 * ones(size(section_mask))
 
-    fi2, s2 = DIVAndrun(mask, pmn, (ndgrid(ll_grid, pr_grid)), (ll_vals, pr_vals), 
+    fi2, s2 = DIVAndrun(section_mask, pmn, (ndgrid(ll_grid, pr_grid)), (ll_vals, pr_vals), 
     data_residual, (lenz,lenx), 0.1)
     
     gridded_data = var_mean .+ fi .+ fi2
@@ -515,7 +515,7 @@ function grid_cruise(
         residuals,
         ll_grid,
         pr_grid,
-        mask,
+        section_mask,
         gridded_data'
         )
         

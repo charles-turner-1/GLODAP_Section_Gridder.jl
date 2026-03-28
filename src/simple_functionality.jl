@@ -185,12 +185,12 @@ search distance for correlation length fitting
 """
 function search_z_func(z)
     if z < 500
-        return 50
+        return 50 
     elseif z < 1000
         return 100
     elseif z < 2000
-        return 250
+        return 250 
     else
-        return 1000
+        return 1000 
     end
 end

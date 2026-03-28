@@ -166,16 +166,53 @@ function fit_lengths(
 )::Tuple{Vector{Float64}, Vector{Float64}}
     @info "Computing correlation lengths: horizontal"
     _x = (vars[!, "G2longitude"], vars[!, "G2latitude"], vars[!, "G2pressure"])
-    lenx, _dbinfo = fithorzlen(_x, data_residual, pr_grid, searchz=search_z_func)
+
+    lenx, _dbinfo = fithorzlen_increasing_search(
+        _x,
+        data_residual,
+        pr_grid;
+        searchz=search_z_func,
+        multiplier=1
+    )
 
     @info "Computing correlation lengths: vertical"
     lenz, _dbinfo = fitvertlen(
         _x, 
         data_residual, 
-        pr_grid,
+        pr_grid;
         searchz=search_z_func, 
         limitfun= (z, len) -> max(min(len, 1000), 10)
-)
+    )
 
     return lenx, lenz
+end
+
+
+"""
+Try to fit with a multiplier value. If it fails, return this function, with the
+multiplier incremented by one. In theory, this should keep trying to fit with an
+increasing search window until it succeeds.
+"""
+function fithorzlen_increasing_search(_x, data_residual, pr_grid; searchz, multiplier)
+
+    if multiplier > 15
+        error("fithorzlen failed after 15 attempts with increasing search window. Please check the data and search_z_func.")
+    end
+
+    function search_z_func(z)
+        return multiplier * searchz(z)
+    end
+    
+    try
+        return fithorzlen(_x, data_residual, pr_grid; searchz=search_z_func)
+    catch
+        @warn "fithorzlen failed with multiplier $multiplier; retrying with multiplier $(multiplier + 1)"
+        return fithorzlen_increasing_search(
+            _x,
+            data_residual,
+            pr_grid;
+            searchz=search_z_func,
+            multiplier = multiplier + 1
+        )
+    end
 end
