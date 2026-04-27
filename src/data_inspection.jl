@@ -58,11 +58,11 @@ function list_section_expocodes(
 )::DataFrame
     # Lists out all the expocodes of cruises occupying a given section
     if expocode_dir === nothing
-        expocodes = joinpath(root,"data/SectionExpocodes","$sectionName.csv")
+        expocodes = joinpath(root, "data/SectionExpocodes", "$section_name.csv")
     else # Allow manual specification of expocodeDir so user can specify something weird if they want
-        expocodes = joinpath(expocode_dir,"$sectionName.csv")
+        expocodes = joinpath(expocode_dir, "$section_name.csv")
     end
-    return CSV.read(expocodes,DataFrame)
+    return CSV.read(expocodes, DataFrame)
 end
 
 

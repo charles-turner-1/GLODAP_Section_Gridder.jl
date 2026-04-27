@@ -11,3 +11,8 @@ coverage:
 comment:
   layout: "header, diff, flags, files"
   require_changes: true
+
+ignore:
+  - "**/.julia/**"
+  - "**/deps/**"
+  - "**/test/**"
