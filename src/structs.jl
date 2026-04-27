@@ -9,6 +9,11 @@ struct ScaleFactors
     horz::Matrix{Float64}
 end
 
+"""
+    GriddedCruise
+
+Container for the inputs, intermediate residuals, and final gridded output returned by `grid_cruise`.
+"""
 struct GriddedCruise
     expocode::String
     section_name::String

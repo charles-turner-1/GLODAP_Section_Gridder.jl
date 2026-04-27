@@ -1,3 +1,8 @@
+"""
+    checkPartialCruise(horzGrid; horzCoordinate, obsLat, obsLon)
+
+Detect whether a cruise only spans part of the target section extent.
+"""
 function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
                             ,obsLat::Vector{Float64},obsLon::Vector{Float64})
     # Check if the cruise we are gridding didn't occupy the full section. This 
@@ -33,6 +38,11 @@ function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
     return isPartialCruise
 end
 
+"""
+    maskPartialCruise(mask; obsLat, obsLon, horzGrid, horzCoordinate)
+
+Trim a section mask to the observed horizontal span of a partial cruise.
+"""
 function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
                            ,obsLon::Vector{Float64},horzGrid::Vector{Float64}
                            ,horzCoordinate::String)
@@ -64,6 +74,11 @@ function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
 end
 
 
+"""
+    maskPartialSectionPipeline(; kwargs...)
+
+Apply partial-cruise mask truncation across an already-gridded section stack.
+"""
 function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                                     ,GOSHIP_DIR::Union{String,Nothing}=nothing
                                     ,MASK_MATFILE::Union{String,Nothing}=nothing
@@ -140,6 +155,11 @@ function maskPartialSectionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     return variable
 end
 
+"""
+    checkSectionPartialCruises(; kwargs...)
+
+Return a boolean vector indicating which cruises in a section appear to be partial occupations.
+"""
 function checkSectionPartialCruises(;GLODAP_DIR::Union{String,Nothing}=nothing
                                     ,GOSHIP_DIR::Union{String,Nothing}=nothing
                                     ,MASK_MATFILE::Union{String,Nothing}=nothing

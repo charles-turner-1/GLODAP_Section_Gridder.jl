@@ -1,3 +1,8 @@
+"""
+    horzCorrDistanceKilometres(horzLengthDegrees; latitudes=nothing, meanLatitude=nothing, horzCoordinate=nothing)
+
+Convert horizontal correlation lengths from degrees to kilometres.
+"""
 function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
                                ;latitudes::Union{Vector{Float64},Nothing}=nothing
                                ,meanLatitude::Union{Float64,Nothing}=nothing
@@ -22,6 +27,11 @@ function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
     return scaleFactor * horzLengthDegrees
 end
 
+"""
+    calcCorrLengths(; variable, obsLat, obsLon, obsPres, presGrid, pressureStepNumber=10, verticalSearchRange=100, lenxFactor=1)
+
+Fit vertical and horizontal correlation lengths in pressure space for a set of cruise observations.
+"""
 function calcCorrLengths(;variable::Vector{Float64},
                         obsLat::Vector{Float64},
                         obsLon::Vector{Float64},
@@ -76,6 +86,11 @@ function calcCorrLengths(;variable::Vector{Float64},
     return lenzSmthd, lenxKM
 end
 
+"""
+    calcDensityCorrLengths(variable; obsLat, obsLon, obsSigma, sigGrid, lenxPrescribed, sigmaStepNumber=10, verticalSearchRange=0.0001)
+
+Fit correlation lengths in density space for isopycnal gridding workflows.
+"""
 function calcDensityCorrLengths(variable::Vector{Float64}
                                 ;obsLat::Vector{Float64}
                                 ,obsLon::Vector{Float64}
