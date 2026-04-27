@@ -1,9 +1,19 @@
+"""
+    readDefaults()
+
+Parse and return the package `defaults.toml` configuration as a dictionary-like object.
+"""
 function readDefaults()
     # This function will look at the defaults in defaults.toml and save them. It
     # will also print them unless told not to.
     return TOML.parsefile(joinpath(root,"defaults.toml"))
 end
 
+"""
+    changeDefaults()
+
+Interactively edit values in `defaults.toml` and write the updated file back to disk.
+"""
 function changeDefaults()
     @warn("This function will overwrite your defaults.toml file. If you want to
     restore it to the default settings, use restoreDefaults().")
@@ -29,6 +39,11 @@ function changeDefaults()
     return nothing
 end
 
+"""
+    restoreDefaults()
+
+Restore `defaults.toml` from the bundled backup file after an interactive confirmation.
+"""
 function restoreDefaults()
     @warn("This function will restore your \"defaults.toml\" file to its default
     state (haha), if you have overwritten it and somehow buggered it up. Use with
@@ -40,6 +55,11 @@ function restoreDefaults()
 end
 
 # function listAvailableMasks(MASK_MATFILE::Union{String,Nothing}=nothing)
+"""
+    list_masks(MASK_MATFILE=nothing)
+
+Print the available section mask names from the configured mask MAT file.
+"""
 function list_masks(MASK_MATFILE::Union{String,Nothing}=nothing)
     # Reads the section mask file and returns the available masks.
     MASK_MATFILE === nothing ? MASK_MATFILE = readDefaults()["MASK_MATFILE"] : nothing
@@ -52,6 +72,11 @@ function list_masks(MASK_MATFILE::Union{String,Nothing}=nothing)
 end
 
 # function listSectionExpocodes(sectionName::String ,expocodeDir::Union{String,Nothing}=nothing)
+"""
+    list_section_expocodes(section_name; expocode_dir=nothing)
+
+Load the bundled expocode table for a section and return it as a `DataFrame`.
+"""
 function list_section_expocodes(
     section_name::AbstractString,
     expocode_dir::Union{AbstractString,Nothing}=nothing,
@@ -67,6 +92,11 @@ end
 
 
 # function listAvailableGLODAPVariables(GLODAP_DIR::Union{String,Nothing}=nothing, GLODAP_DATAFILE::Union{String,Nothing}=nothing)
+"""
+    list_glodap_vars(glodap_dir=nothing, glodap_datafile=nothing)
+
+Print the variable names available in the configured legacy MAT-format GLODAP file.
+"""
 function list_glodap_vars(
     glodap_dir::Union{String,Nothing}=nothing,
     glodap_datafile::Union{String,Nothing}=nothing

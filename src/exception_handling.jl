@@ -1,3 +1,8 @@
+"""
+    testExpocodeException(; expocode, variableName, EXCEPTIONS_FILENAME=nothing, EXCEPTIONS_DIR=nothing)
+
+Check whether a cruise/variable pair has a stored exception data file.
+"""
 function testExpocodeException(;expocode::Union{String,String15}
                                ,variableName::String
                                ,EXCEPTIONS_FILENAME::Union{String,Nothing}=nothing
@@ -29,6 +34,11 @@ function testExpocodeException(;expocode::Union{String,String15}
     return isException
 end
 
+"""
+    loadExceptionData(; expocode, variableName, EXCEPTIONS_DIR=nothing)
+
+Load stored exception data for a cruise, including the requested variable and standard gridding coordinates.
+"""
 function loadExceptionData(;expocode::Union{String,String15}
                            ,variableName::String
                            ,EXCEPTIONS_DIR::Union{String,Nothing}=nothing)
@@ -52,6 +62,11 @@ function loadExceptionData(;expocode::Union{String,String15}
 
 end
 
+"""
+    writeCruiseException(; outputExpocode, cruiseDict, yearString="0000", EXCEPTIONS_DIR=nothing)
+
+Write a merged exception MAT file for a synthetic or corrected cruise.
+"""
 function writeCruiseException(;outputExpocode::String
                               ,cruiseDict::Dict{String, Vector{Float64}}
                               ,yearString::String="0000" # Can be manually fixed afterwards if needs be
@@ -94,6 +109,11 @@ function writeCruiseException(;outputExpocode::String
     return nothing
 end
 
+"""
+    checkVariableExceptions(; expocode, variableName, variable=nothing, station=nothing, pressure=nothing, GLODAP_DIR=nothing, EXCEPTIONS_FILENAME=nothing, EXCEPTIONS_DIR=nothing)
+
+Return the indices of observations that survive any manual per-variable exclusion rules.
+"""
 function checkVariableExceptions(;expocode::Union{String,String15},variableName::String
                                ,variable::Union{Vector{Float64},Nothing} = nothing
                                ,station::Union{Vector{Float64},Nothing} = nothing
@@ -167,6 +187,11 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
 
 end
 
+"""
+    checkHorzLenFactor(; expocode, variableName, griddingType, HORZLEN_EXCEPTIONS=nothing)
+
+Look up an optional manual multiplier for the horizontal correlation length fit.
+"""
 function checkHorzLenFactor(;expocode::Union{String,String15},variableName::String
                             ,griddingType::String
                             ,HORZLEN_EXCEPTIONS::Union{String,Nothing}=nothing)
@@ -195,6 +220,11 @@ function checkHorzLenFactor(;expocode::Union{String,String15},variableName::Stri
     end
 end
 
+"""
+    cocatenateCruises(expocodes; GLODAP_DIR=nothing, GLODAP_FILENAME=nothing, stationRanges=nothing)
+
+Merge one or more cruises from the legacy MAT dataset into a single dictionary of variables.
+"""
 function cocatenateCruises(expocodes::Vector{String}
                           ;GLODAP_DIR::Union{String,Nothing}=nothing
                           ,GLODAP_FILENAME::Union{String,Nothing}=nothing

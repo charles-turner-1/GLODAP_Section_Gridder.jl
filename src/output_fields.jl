@@ -1,3 +1,8 @@
+"""
+    writeOutputField(; variable, sectionName, variableName, horzCoordinate, userName=nothing, outputPath=nothing)
+
+Write a single 3D gridded section field to a NetCDF file.
+"""
 function writeOutputField(;variable::Array{Float64,3},sectionName::String
                           ,variableName::String
                           ,horzCoordinate::String
@@ -39,6 +44,11 @@ function writeOutputField(;variable::Array{Float64,3},sectionName::String
 
 end
 
+"""
+    writeOutputFields(; variables, sectionName, variableNames, horzCoordinate, userName=nothing, outputPath=nothing)
+
+Write several gridded section fields into one NetCDF file.
+"""
 function writeOutputFields(;variables::Vector{Array{Float64,3}},sectionName::String
                            ,variableNames::Vector{String}
                            ,horzCoordinate::String

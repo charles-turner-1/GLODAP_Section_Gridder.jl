@@ -6,6 +6,11 @@ be just a bunch of functions which can be called when you know what variables
 you want to interpolate from what sections.    =#
 
 
+"""
+    easyDIVAGrid(; kwargs...)
+
+Run the main DIVAnd interpolation step for a 2D section field after preparing anomalies and coordinates.
+"""
 function easyDIVAGrid(;variable::Vector{Float64}
                       ,vertVar::Vector{Float64}
                       ,latLon::Vector{Float64}
@@ -57,6 +62,11 @@ function easyDIVAGrid(;variable::Vector{Float64}
     return griddedVariable
 end
 
+"""
+    createDensitySpaceMask(obsSigma, obsLonLat, lonLatGrid, sigmaGrid, pressureSpaceMask)
+
+Construct a sigma-space mask that limits isopycnal interpolation to observed density ranges.
+"""
 function createDensitySpaceMask(obsSigma::Vector{Float64}, obsLonLat::Vector{Float64}
                                ,lonLatGrid::Vector{Float64}, sigmaGrid::Vector{Float64}
                                ,pressureSpaceMask::Matrix{Bool})
@@ -118,6 +128,11 @@ function createDensitySpaceMask(obsSigma::Vector{Float64}, obsLonLat::Vector{Flo
     return sigmaMask
 end
 
+"""
+    easyDIVAisopycnal(; kwargs...)
+
+Grid observations in density space and map the result back into pressure space.
+"""
 function easyDIVAisopycnal(;obsVariable::Vector{Float64}
                       ,obsSigma::Vector{Float64}
                       ,obsPressure::Vector{Float64}
@@ -196,6 +211,11 @@ end
 
 
 
+"""
+    easyDIVACrossValidate(; kwargs...)
+
+Run DIVAnd cross-validation to estimate better length-scale and epsilon multipliers.
+"""
 function easyDIVACrossValidate(;variable::Vector{Float64}
                                ,vertVar::Vector{Float64}
                                ,latLon::Vector{Float64}

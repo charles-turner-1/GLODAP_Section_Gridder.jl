@@ -5,6 +5,11 @@ include("./data_loading.jl")
 include("./correlation_lengths.jl")
 include("./simple_functionality.jl")
 
+"""
+    gridCruisePipeline(; kwargs...)
+
+Run the legacy end-to-end pipeline for gridding a single cruise onto one section.
+"""
 function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,GOSHIP_DIR::Union{String,Nothing}=nothing
                             ,MASK_MATFILE::Union{String,Nothing}=nothing
@@ -155,6 +160,11 @@ function gridCruisePipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
     return griddedVarEasyPipeline
 end
 
+"""
+    gridSectionPipeline(; kwargs...)
+
+Run the legacy end-to-end pipeline for gridding every usable occupation of a section.
+"""
 function gridSectionPipeline(;sectionName::String
                              ,variableName::String
                              ,horzCoordinate::String
@@ -309,6 +319,11 @@ function gridSectionPipeline(;sectionName::String
     return outputArray
 end
 
+"""
+    gridExceptionPipeline(; kwargs...)
+
+Grid a stored exception cruise using the legacy pipeline machinery.
+"""
 function gridExceptionPipeline(;GLODAP_DIR::Union{String,Nothing}=nothing
                             ,GOSHIP_DIR::Union{String,Nothing}=nothing
                             ,MASK_MATFILE::Union{String,Nothing}=nothing
