@@ -99,25 +99,27 @@ Grid data can be downloaded as NetCDF files from the following Zenodo link:
 """
 function load_section_info(section_name::String,
                               )::SectionInfo
-    
-    ds = NCDataset(joinpath(pkg_root,"data","masks","$section_name.nc"))
+    normalized_section_name = lowercase(section_name)
+
+    ds = NCDataset(joinpath(pkg_root, "data", "masks", "$normalized_section_name.nc"))
 
     horz_coord = ds.attrib["horz_coord"] # Hardcoded this into the files - will break otherwise
 
     ll_grid = ds[horz_coord][:]
     pr_grid = ds["pressure"][:]
-    
 
     mask = ds["mask"]
-    mask = convert(Array{Bool},(mask .== 1))
+    mask = convert(Array{Bool}, (mask .== 1))
 
-    basin = section_name[1]
+    basin = uppercase(section_name[1])
 
     if basin != 'P'
-        ll_grid[ll_grid .> 180] .-=360 # So GLODAP and GO-SHIP data are using the
+        ll_grid[ll_grid .> 180] .-= 360 # So GLODAP and GO-SHIP data are using the
         # same longitudes. Probably will want to update this to be basin dependent
         # or we might run into problems in the Pacific
     end
+
+    close(ds)
 
     return SectionInfo(
         ll_grid, pr_grid, mask, horz_coord

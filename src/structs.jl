@@ -1,3 +1,8 @@
+struct ScaleFactors
+    vert::Matrix{Float64}
+    horz::Matrix{Float64}
+end
+
 struct GriddedCruise
     expocode::String
     section_name::String
