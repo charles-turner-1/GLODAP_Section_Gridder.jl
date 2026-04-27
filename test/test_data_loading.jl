@@ -108,3 +108,50 @@ end
         @test resolved == joinpath(cache_dir, csv_name)
     end
 end
+
+@testset "grid_cruise forwards explicit glodap_db through resolver" begin
+    captured_db = Ref{Any}(nothing)
+    residual_call = Ref(0)
+
+    @eval GSG begin
+        function load_section_info(section_name::String)
+            return SectionInfo([0.0, 1.0], [10.0, 20.0], trues(2, 2), "longitude")
+        end
+
+        function resolve_glodap_db_path(glodap_db::Union{Nothing,AbstractString}=nothing; kwargs...)
+            return something(glodap_db, "resolved-from-defaults.csv")
+        end
+
+        function load_glodap_vars(varnames::AbstractVector{<:AbstractString}, expocode::AbstractString, glodap_db::String)
+            $captured_db[] = glodap_db
+            return DataFrame(
+                "G2theta" => [1.0, 2.0],
+                "G2pressure" => [10.0, 20.0],
+                "G2longitude" => [0.0, 1.0],
+                "G2latitude" => [-30.0, -31.0],
+            )
+        end
+
+        function remove_scalar_mean(var::AbstractVector{Float64})
+            return 1.5, [-0.5, 0.5]
+        end
+
+        function fit_lengths(vars::DataFrame, data_residual::Vector{Float64}, pr_grid::Vector{Real}, search_z_func::Function)
+            return [2.0, 2.0], [3.0, 3.0]
+        end
+
+        function DIVAndrun(mask, pmn, grids, coords, values, lens, epsilon)
+            return zeros(2, 2), nothing
+        end
+
+        function DIVAnd_residual(s, fi)
+            $residual_call[] += 1
+            return $residual_call[] == 1 ? [0.1, 0.2] : [0.3, 0.4]
+        end
+    end
+
+    result = GSG.grid_cruise("33RO19980123", "A05", "G2theta"; glodap_db="/tmp/mock-glodap.csv")
+
+    @test captured_db[] == "/tmp/mock-glodap.csv"
+    @test result isa GSG.GriddedCruise
+end
