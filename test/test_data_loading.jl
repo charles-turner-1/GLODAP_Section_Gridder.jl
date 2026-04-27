@@ -49,7 +49,31 @@ end
     @test section_info.horz_coord == "longitude"
 end
 
-@testset "load_glodap_vars and cache fallback" begin
+@testset "resolve_glodap_db_path uses mocked env var" begin
+    mktempdir() do tmpdir
+        csv_path = joinpath(tmpdir, "fixture_glodap.csv")
+
+        open(csv_path, "w") do io
+            write(io, "G2expocode,G2cruise,G2theta,G2pressure,G2longitude\n")
+            write(io, "33RO19980123,1,1.5,10,-30\n")
+            write(io, "33RO19980123,1,1.6,20,-31\n")
+            write(io, "OTHER,2,9.9,999,999\n")
+        end
+
+        withenv("GLODAP_DB" => csv_path) do
+            resolved = GSG.resolve_glodap_db_path(nothing; allow_download=false)
+            @test resolved == csv_path
+
+            vars = GSG.load_glodap_vars(["G2theta", "G2pressure", "G2longitude"], "33RO19980123", resolved)
+            @test names(vars) == ["G2theta", "G2pressure", "G2longitude"]
+            @test size(vars, 1) == 2
+            @test vars[!, "G2theta"] == [1.5, 1.6]
+            @test vars[!, "G2pressure"] == [10, 20]
+        end
+    end
+end
+
+@testset "resolve_glodap_db_path uses stubbed download source" begin
     mktempdir() do tmpdir
         csv_name = "fixture_glodap.csv"
         csv_path = joinpath(tmpdir, csv_name)
@@ -71,21 +95,16 @@ end
         end
 
         cache_dir = joinpath(tmpdir, "cache")
-        resolved = GSG.resolve_glodap_db_path(
-            nothing;
-            cache_dir=cache_dir,
-            filename=csv_name,
-            download_url="file://$(zip_path)",
-        )
+        resolved = withenv("GLODAP_DB" => nothing, "GLODAP_DB_URL" => nothing, "GLODAP_DB_FILENAME" => nothing) do
+            GSG.resolve_glodap_db_path(
+                nothing;
+                cache_dir=cache_dir,
+                filename=csv_name,
+                download_url="file://$(zip_path)",
+            )
+        end
 
         @test isfile(resolved)
         @test resolved == joinpath(cache_dir, csv_name)
-
-        vars = GSG.load_glodap_vars(["G2theta", "G2pressure", "G2longitude"], "33RO19980123", resolved)
-
-        @test names(vars) == ["G2theta", "G2pressure", "G2longitude"]
-        @test size(vars, 1) == 2
-        @test vars[!, "G2theta"] == [1.5, 1.6]
-        @test vars[!, "G2pressure"] == [10, 20]
     end
 end
