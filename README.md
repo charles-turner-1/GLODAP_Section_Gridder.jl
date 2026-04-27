@@ -156,6 +156,18 @@ masked out. This can be useful for partial cruises.
 ### Example usage
 
 See `examples/example_notebook.ipynb` for example usage.
+
+## Documentation
+
+A new docs home is being built out under [`docs/`](docs/README.md).
+
+Good starting points:
+
+- [`docs/getting-started.md`](docs/getting-started.md)
+- [`docs/data-sources.md`](docs/data-sources.md)
+- [`docs/api/grid_cruise.md`](docs/api/grid_cruise.md)
+- [`docs/migration-notes.md`](docs/migration-notes.md)
+
 ## Installation
 
 Presently, this package can be installed by cloning this repository (`git clone https://github.com/charles-turner-1/GLODAP_Section_Gridder.jl`). It will soon
