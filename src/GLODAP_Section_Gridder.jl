@@ -10,11 +10,13 @@ using CSV
 using DelimitedFiles
 using NCDatasets
 using DataFrames
+using Downloads
 using Interpolations
 using Base.Threads
 using TOML
 using Plots
 using Statistics
+using ZipFile
 # Write your package code here.
 
 include("data_inspection.jl") # Checked

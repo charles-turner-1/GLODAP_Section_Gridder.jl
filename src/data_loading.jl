@@ -144,6 +144,80 @@ struct SectionInfo
     horz_coord::String
 end
 
+const DEFAULT_GLODAP_CACHE_DIR = joinpath(homedir(), ".glodap")
+const DEFAULT_GLODAP_FILENAME = "GLODAPv2.2023_Merged_Master_File.csv"
+const DEFAULT_GLODAP_ARCHIVE_URL = "https://glodap.info/glodap_files/v2.2023/GLODAPv2.2023_Merged_Master_File.csv.zip"
+
+expand_user_path(path::AbstractString) = startswith(path, "~/") ? joinpath(homedir(), path[3:end]) : path
+
+function download_glodap_db(
+    destination::AbstractString;
+    download_url::AbstractString=DEFAULT_GLODAP_ARCHIVE_URL,
+)::String
+    mkpath(dirname(destination))
+
+    archive_tmp = "$(destination).zip.download"
+    csv_tmp = "$(destination).download"
+
+    try
+        Downloads.download(download_url, archive_tmp)
+
+        reader = ZipFile.Reader(archive_tmp)
+        try
+            wanted_name = basename(destination)
+            csv_entry = findfirst(file -> basename(file.name) == wanted_name, reader.files)
+            csv_entry === nothing && (csv_entry = findfirst(file -> endswith(lowercase(file.name), ".csv"), reader.files))
+
+            csv_entry === nothing && error("Downloaded archive from $(download_url) did not contain a CSV file")
+
+            open(csv_tmp, "w") do io
+                write(io, read(reader.files[csv_entry]))
+            end
+        finally
+            close(reader)
+        end
+
+        mv(csv_tmp, destination; force=true)
+        return destination
+    finally
+        isfile(archive_tmp) && rm(archive_tmp; force=true)
+        isfile(csv_tmp) && rm(csv_tmp; force=true)
+    end
+end
+
+function resolve_glodap_db_path(
+    glodap_db::Union{Nothing,AbstractString}=nothing;
+    cache_dir::AbstractString=DEFAULT_GLODAP_CACHE_DIR,
+    filename::AbstractString=get(ENV, "GLODAP_DB_FILENAME", DEFAULT_GLODAP_FILENAME),
+    download_url::AbstractString=get(ENV, "GLODAP_DB_URL", DEFAULT_GLODAP_ARCHIVE_URL),
+    allow_download::Bool=true,
+)::String
+    candidates = String[]
+
+    glodap_db === nothing || push!(candidates, expand_user_path(glodap_db))
+
+    if haskey(ENV, "GLODAP_DB")
+        push!(candidates, expand_user_path(ENV["GLODAP_DB"]))
+    end
+
+    defaults = readDefaults()
+    if haskey(defaults, "GLODAP_DIR") && haskey(defaults, "GLODAP_FILENAME")
+        defaults_path = joinpath(defaults["GLODAP_DIR"], defaults["GLODAP_FILENAME"])
+        endswith(lowercase(defaults_path), ".csv") && push!(candidates, defaults_path)
+    end
+
+    cache_path = glodap_db === nothing ? joinpath(expand_user_path(cache_dir), filename) : expand_user_path(glodap_db)
+    push!(candidates, cache_path)
+
+    for candidate in unique(candidates)
+        isfile(candidate) && return candidate
+    end
+
+    allow_download || error("Could not find a GLODAP CSV. Checked: $(join(unique(candidates), ", "))")
+
+    @info "Downloading GLODAP CSV to $(cache_path)"
+    return download_glodap_db(cache_path; download_url=download_url)
+end
 
 function load_glodap_vars(
     varnames::AbstractVector{<:AbstractString},

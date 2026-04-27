@@ -33,6 +33,7 @@ eventually. However, this is not currently a priority.)
 These are explained in detail below.
 - Top level functionality is called using one of two functions: `gridCruisePipeline` 
 or `gridSectionPipeline`. 
+- The newer `grid_cruise(...)` path now accepts `glodap_db="/path/to/GLODAPv2.2023_Merged_Master_File.csv"`. If you do not pass one, it will look for a local CSV and otherwise cache the default merged-master CSV under `~/.glodap/`.
     - `gridCruisePipeline` will grid a variable from a single cruise.
     - `gridSectionPipeline` will grid a single variable, for all repeat occupations 
     of a hydrographic section.

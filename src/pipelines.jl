@@ -408,7 +408,7 @@ end
 
 
 """
-grid_cruise(expocode::String, section_name::String, varname::String, gridding::String="isobaric")::GriddedCruise
+grid_cruise(expocode::String, section_name::String, varname::String, gridding::String="isobaric"; glodap_db=nothing)::GriddedCruise
 
 Grids cruise data for a specified section, variable, and gridding method using the DIVAnd interpolation framework.
 
@@ -417,6 +417,7 @@ Grids cruise data for a specified section, variable, and gridding method using t
 - `section_name::String`: The name of the section to be gridded.
 - `varname::String`: The variable name to be gridded (e.g., temperature, salinity).
 - `gridding::String="isobaric"`: The gridding method to use. Defaults to "isobaric".
+- `glodap_db`: Optional path to a GLODAP merged-master CSV. If omitted, the package will look for an existing local CSV and otherwise download the default one into `~/.glodap/`.
 
 # Returns
 - `GriddedCruise`: A structured object containing the gridded data and associated metadata.
@@ -433,7 +434,7 @@ Grids cruise data for a specified section, variable, and gridding method using t
 9. Returns a `GriddedCruise` object containing the gridded data, residuals, and metadata.
 
 # Notes
-- The function assumes the availability of GLODAP data at the specified file path.
+- If `glodap_db` is not supplied, the function checks `ENV["GLODAP_DB"]`, then any CSV configured in `defaults.toml`, then `~/.glodap/GLODAPv2.2023_Merged_Master_File.csv`. If nothing is found, it downloads the default archive to that cache location.
 - The correlation lengths for the second DIVAnd fitting are computed dynamically from the data.
 - The `pmn` parameter for the second fitting is currently hardcoded and may require adjustment.
 
@@ -445,7 +446,8 @@ function grid_cruise(
     expocode::String,
     section_name::String,
     varname::String,
-    gridding::String="isobaric",
+    gridding::String="isobaric";
+    glodap_db::Union{Nothing,String}=nothing,
 )::GriddedCruise
 
     @info "Gridding cruise $expocode for section $section_name with variable $varname using $gridding gridding method."
@@ -460,11 +462,13 @@ function grid_cruise(
 
     secondary_horz_coord = horz_coordinate == "longitude" ? "G2latitude" : "G2longitude"
 
+    glodap_db_path = resolve_glodap_db_path(glodap_db)
+
     @info "Loading GLODAP data for $expocode, variables $varname, $G2horz_coord, G2pressure"
     vars = load_glodap_vars(
         [varname,"G2pressure",G2horz_coord, secondary_horz_coord],
         expocode,
-        "/Users/u1166368/GLODAP/GLODAPv2.2023_Merged_Master_File.csv"
+        glodap_db_path,
     )
     
     var = vars[!, varname]
