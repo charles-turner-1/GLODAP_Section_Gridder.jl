@@ -1,3 +1,9 @@
+"""
+    ScaleFactors
+
+Container for the vertical and horizontal inverse-distance scale grids used by
+DIVAnd-style interpolation steps.
+"""
 struct ScaleFactors
     vert::Matrix{Float64}
     horz::Matrix{Float64}

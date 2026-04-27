@@ -7,6 +7,7 @@ using Test
 end
 
 @testset "create_sigma_grid Tests" begin
+    # Test with an exact fraction of the requested 600 intervals.
     x = collect(0:6000)
     gridded_sig = GSG.create_sigma_grid(x)
     expected = collect(0:10:6000)
@@ -18,12 +19,14 @@ end
 
     @test gridded_sig == expected
 
+    # Test with a non-exact fraction, where we expect truncation onto the implied step.
     x = collect(0:6001)
     gridded_sig = GSG.create_sigma_grid(x)
     expected = collect(0:10:6000)
 
     @test gridded_sig == expected
 
+    # Test with floating-point sigma values.
     x = collect(0:0.1:59.9)
     expected = collect(0:0.1:59.9)
     gridded_sig = GSG.create_sigma_grid(x)
@@ -32,12 +35,14 @@ end
 end
 
 @testset "grid_sigma_distance Tests" begin
+    # Simple evenly-spaced sigma grid smoke test.
     sigma_grid = [0.0, 10.0, 20.0, 30.0]
 
     @test GSG.grid_sigma_distance(sigma_grid) == fill(7.5, 4)
 end
 
 @testset "calc_scale_factors Tests" begin
+    # Keep this tiny and explicit so failures are readable.
     vert_dist = [10.0, 20.0]
     horz_dist = [100.0, 200.0, 400.0]
 
