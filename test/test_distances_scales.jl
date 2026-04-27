@@ -1,70 +1,55 @@
 using Test
-include("../src/distances_scales.jl")
-
-
-#=
-@testset "grid_horz_dist Tests" begin
-    lon_grid = [0.0, 90.0, 180.0, 270.0]
-    lon = -90.0
-
-    @test grid_vert_dist(lon_grid, lon) == 270.0
-
-end
-=#
-
 
 @testset "grid_vert_dist Tests" begin
     pr_grid = [0.0, 90.0, 180.0, 270.0]
 
-    @test grid_vert_dist(pr_grid) == [10,10,10,10]
-
+    @test GSG.grid_vert_dist(pr_grid) == [10, 10, 10, 10]
 end
-
 
 @testset "create_sigma_grid Tests" begin
-    # Tests with an exact fraction
-    x = [v for v in 0:6000]
-    gridded_sig = create_sigma_grid(x)
-
-    expected = [v for v in 0:10:6000]
-
-    @test gridded_sig == expected
-
-    gridded_sig = create_sigma_grid(x,1200)
-    expected = [v for v in 0:5:6000]
+    # Test with an exact fraction of the requested 600 intervals.
+    x = collect(0:6000)
+    gridded_sig = GSG.create_sigma_grid(x)
+    expected = collect(0:10:6000)
 
     @test gridded_sig == expected
 
-    # Tests with a non-exact fraction
-    x = [v for v in 0:6001]
-    gridded_sig = create_sigma_grid(x)
-    expected = [v for v in 0:10:6000]
+    gridded_sig = GSG.create_sigma_grid(x, 1200)
+    expected = collect(0:5:6000)
 
     @test gridded_sig == expected
 
-    # Test with a float
-    x = [v for v in 0:0.1:59.9]
-    expected = [v for v in 0:0.1:59.9]
-    gridded_sig = create_sigma_grid(x)
+    # Test with a non-exact fraction, where we expect truncation onto the implied step.
+    x = collect(0:6001)
+    gridded_sig = GSG.create_sigma_grid(x)
+    expected = collect(0:10:6000)
+
+    @test gridded_sig == expected
+
+    # Test with floating-point sigma values.
+    x = collect(0:0.1:59.9)
+    expected = collect(0:0.1:59.9)
+    gridded_sig = GSG.create_sigma_grid(x)
 
     @test gridded_sig == expected
 end
-
 
 @testset "grid_sigma_distance Tests" begin
-    lon_grid = [0.0, 90.0, 180.0, 270.0]
-    lon = -90.0
+    # Simple evenly-spaced sigma grid smoke test.
+    sigma_grid = [0.0, 10.0, 20.0, 30.0]
 
-    @test modulo_lon(lon_grid, lon) == 270.0
-
+    @test GSG.grid_sigma_distance(sigma_grid) == fill(7.5, 4)
 end
-
 
 @testset "calc_scale_factors Tests" begin
-    lon_grid = [0.0, 90.0, 180.0, 270.0]
-    lon = -90.0
+    # Keep this tiny and explicit so failures are readable.
+    vert_dist = [10.0, 20.0]
+    horz_dist = [100.0, 200.0, 400.0]
 
-    @test modulo_lon(lon_grid, lon) == 270.0
+    scale_factors = GSG.calc_scale_factors(vert_dist, horz_dist; print_scales=false)
 
+    @test size(scale_factors.vert) == (2, 3)
+    @test size(scale_factors.horz) == (2, 3)
+    @test scale_factors.vert[:, 1] == [0.1, 0.05]
+    @test scale_factors.horz[1, :] == [0.01, 0.005, 0.0025]
 end
-
