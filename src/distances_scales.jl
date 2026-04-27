@@ -1,5 +1,10 @@
 include("./structs.jl")
 # function gridHorzDistance(GLODAP_latitudes::Vector{Float64} ,GLODAP_longitudes::Vector{Float64} ,latlonGrid)
+"""
+    grid_horz_dist(GLODAP_latitudes, GLODAP_longitudes, ll_grid)
+
+Estimate a representative horizontal station spacing in kilometres across a section grid.
+"""
 function grid_horz_dist(
     GLODAP_latitudes::AbstractVector{<:Real},
     GLODAP_longitudes::AbstractVector{<:Real}, 
@@ -48,6 +53,11 @@ end
 
 
 # function createSigmaGrid(sigmaVals::Vector{Float64},numLevels::Int64=600)
+"""
+    create_sigma_grid(sigma_vals, n_int=600)
+
+Build a reduced adaptive density grid from observed sigma values.
+"""
 function create_sigma_grid(sigma_vals::AbstractVector{<:Real}, n_int::Integer=600)
     # Creates an adaptive grid in sigma space, where we split the sigma space into
     # n_int intervals. The sigma space is defined by the minimum and maximum values
@@ -58,6 +68,11 @@ function create_sigma_grid(sigma_vals::AbstractVector{<:Real}, n_int::Integer=60
 end
 
 # function gridSigDistance(sigmaGrid::Vector{Float64})
+"""
+    grid_sigma_distance(sigma_grid)
+
+Return a constant mean spacing vector for a sigma-coordinate grid.
+"""
 function grid_sigma_distance(
     sigma_grid::AbstractVector{<:AbstractFloat}
 )::Vector{<:AbstractFloat}
