@@ -3,21 +3,11 @@ function horzCorrDistanceKilometres(horzLengthDegrees::Vector{Float64}
                                ,meanLatitude::Union{Float64,Nothing}=nothing
                                ,horzCoordinate::Union{String,Nothing}=nothing)
     # Calculate horizontal correlation length in Kilometres
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
-
-    if latitudes !== nothing
-        meanLatitude = mean(latitudes)
-        # This will overwrite meanLatitude if both are given which I think is probably
-        # the optimal behaviour
-    end
-
-    if horzCoordinate == "longitude"
-        scaleFactor = 111.2 .* cos.(meanLatitude*pi/180)
-    elseif horzCoordinate == "latitude"
-        scaleFactor = 111.2
-    end
+    scaleFactor = corrlen_scale_factor(
+        horzCoordinate=horzCoordinate,
+        latitudes=latitudes,
+        meanLatitude=meanLatitude,
+    )
 
     return scaleFactor * horzLengthDegrees
 end
@@ -53,22 +43,17 @@ function calcCorrLengths(;variable::Vector{Float64},
         lenx !== nothing ? break : nothing
     end
 
-    lenz == 10_000 ? lenz = fill(lenz, size(lenx)) : nothing
+    lenz = corrlen_finalize_lenz(lenz, lenx)
 
-
-    lenz = min.(lenz,1000)
-
-    meanLat = mean(filter(!isnan,obsLat))
+    meanLat = corrlen_mean_latitude(obsLat)
 
     lenxKM = horzCorrDistanceKilometres(lenx,meanLatitude=meanLat,horzCoordinate="longitude")
 
     if pressureStepNumber > 1
-        x_interpolant = LinearInterpolation(presGrid[1:pressureStepNumber:end],lenxKM,extrapolation_bc=NaN)
-        z_interpolant = LinearInterpolation(presGrid[1:pressureStepNumber:end],lenz,extrapolation_bc=NaN)
+        sampleGrid = presGrid[1:pressureStepNumber:end]
+        lenxKM = corrlen_interpolate_to_grid(sampleGrid, lenxKM, presGrid; extrapolation_bc=NaN)
+        lenz = corrlen_interpolate_to_grid(sampleGrid, lenz, presGrid; extrapolation_bc=NaN)
     end
-
-    lenz= z_interpolant.(presGrid)
-    lenxKM = x_interpolant.(presGrid)
 
     lenzSmthd = DIVAnd.smoothfilter(presGrid,lenz,400) # Should presGrid have indices ie. [1:stepno:end] ?
     lenxKM = lenxFactor * DIVAnd.smoothfilter(presGrid,lenxKM,400)
@@ -85,7 +70,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
                                 ,sigmaStepNumber::Integer=10
                                 ,verticalSearchRange::Float64=0.0001)
     # Calculate correlation lengths in density space.
-    goodIdx = non_nan_indices(variable,obsSigma)
+    goodIdx = non_nan_index_pairs(variable,obsSigma)
     lenz, _ = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
     ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=verticalSearchRange
     ,smoothz=0.1)
@@ -110,17 +95,15 @@ function calcDensityCorrLengths(variable::Vector{Float64}
         # Give it a prescribed horizontal correlation length
     end
 
-    meanLat = mean(filter(!isnan,obsLat))
+    meanLat = corrlen_mean_latitude(obsLat)
 
     lenxKM = horzCorrDistanceKilometres(lenx,meanLatitude=meanLat,horzCoordinate="longitude")
 
     if sigmaStepNumber > 1
-        x_interpolant = LinearInterpolation(sigGrid[1:sigmaStepNumber:end],lenxKM,extrapolation_bc=Flat())
-        z_interpolant = LinearInterpolation(sigGrid[1:sigmaStepNumber:end],lenz,extrapolation_bc=Flat())
+        sampleGrid = sigGrid[1:sigmaStepNumber:end]
+        lenxKM = corrlen_interpolate_to_grid(sampleGrid, lenxKM, sigGrid; extrapolation_bc=Flat())
+        lenz = corrlen_interpolate_to_grid(sampleGrid, lenz, sigGrid; extrapolation_bc=Flat())
     end
-
-    lenz= z_interpolant.(sigGrid)
-    lenxKM = x_interpolant.(sigGrid)
     return lenz, lenxKM
 end
 
@@ -199,10 +182,8 @@ function fithorzlen_increasing_search(_x, data_residual, pr_grid; searchz, multi
         error("fithorzlen failed after 15 attempts with increasing search window. Please check the data and search_z_func.")
     end
 
-    function search_z_func(z)
-        return multiplier * searchz(z)
-    end
-    
+    search_z_func = corrlen_retry_search(searchz, multiplier)
+
     try
         return fithorzlen(_x, data_residual, pr_grid; searchz=search_z_func)
     catch
