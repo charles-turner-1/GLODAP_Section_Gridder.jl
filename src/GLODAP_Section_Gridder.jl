@@ -23,6 +23,7 @@ include("simple_functionality.jl") # Checked
 include("exception_handling.jl") # Checked
 include("partial_cruises.jl") # Checked
 include("distances_scales.jl") # Checked, still requires some work but the repackaging is fine.
+include("correlation_length_pure_functions.jl")
 include("correlation_lengths.jl") # Checked
 include("DIVA_WrapperFunctions.jl") # Checked
 include("pipelines.jl") # Checked
