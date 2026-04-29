@@ -20,6 +20,7 @@ using Statistics
 include("data_inspection.jl") # Checked
 include("data_loading.jl") # Checked
 include("simple_functionality.jl") # Checked
+include("legacy_pure_functions.jl")
 include("exception_handling.jl") # Checked
 include("partial_cruises.jl") # Checked
 include("distances_scales.jl") # Checked, still requires some work but the repackaging is fine.

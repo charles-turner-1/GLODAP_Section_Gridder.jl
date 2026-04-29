@@ -3,30 +3,14 @@ function checkPartialCruise(horzGrid::Vector{Float64};horzCoordinate::String
     # Check if the cruise we are gridding didn't occupy the full section. This 
     # is a simple version which will just look at the recorded latitude and 
     # longitude values
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
+    obsXval = legacy_obs_xvals(horzCoordinate, horzGrid, obsLat, obsLon)
+    deltas = legacy_partial_cruise_deltas(horzGrid, obsXval)
 
-    if horzCoordinate == "longitude"
-         obsXval = obsLon
-         obsLon = modulo_lon(horzGrid,obsLon)
-    else
-         obsXval = obsLat
-    end
-
-    maxGridVal = maximum(horzGrid)
-    minGridVal = minimum(horzGrid)
-
-    maxObsVal = maximum(obsXval)
-    minObsVal = minimum(obsXval)
-
-    ΔminVal = minGridVal - minObsVal # If minGrid << minObs, this will be +ve
-    println("ΔminVal = " * string(ΔminVal))
-    ΔmaxVal = maxGridVal - maxObsVal # If maxGrid << maxObs, this will be +ve
-    println("ΔmaxVal = " * string(ΔmaxVal))
+    println("ΔminVal = " * string(deltas.ΔminVal))
+    println("ΔmaxVal = " * string(deltas.ΔmaxVal))
 
     isPartialCruise = false
-    if abs(ΔmaxVal) > 2 || abs(ΔminVal) > 2 # Abs because we might get NH/SH problems
+    if abs(deltas.ΔmaxVal) > 2 || abs(deltas.ΔminVal) > 2 # Abs because we might get NH/SH problems
         isPartialCruise = true
     end
 
@@ -38,29 +22,10 @@ function maskPartialCruise(mask::Matrix{Bool};obsLat::Vector{Float64}
                            ,horzCoordinate::String)
     # If a cruise is a partial cruise, then mask out the regions where we don't 
     # have any observations: otherwise it gets filled in with nonsense
-    if horzCoordinate != "longitude" && horzCoordinate != "latitude"
-        error("\"horzCoordinate\" must be specified to be either \"longitude\" or \"latitude\"")
-    end
+    obsXval = legacy_obs_xvals(horzCoordinate, horzGrid, obsLat, obsLon)
+    deltas = legacy_partial_cruise_deltas(horzGrid, obsXval)
 
-    if horzCoordinate == "longitude"
-         obsXval = obsLon
-         obsLon = modulo_lon(horzGrid,obsLon)
-    else
-         obsXval = obsLat
-    end
-
-    maxObsVal = maximum(obsXval)
-    minObsVal = minimum(obsXval)
-
-    llGrid = Matrix{Float64}(undef,size(mask'))
-    [llGrid[:,i] = horzGrid for i in 1:size(mask,1)]
-    llGrid = llGrid' # Transposing for performance. Probably unimportant & counterproductive
-
-    truncatedMask = copy(mask)
-    truncatedMask[llGrid .< minObsVal] .= false
-    truncatedMask[llGrid .> maxObsVal] .= false
-
-    return truncatedMask
+    return legacy_truncate_mask(mask, horzGrid, deltas.minObsVal, deltas.maxObsVal)
 end
 
 

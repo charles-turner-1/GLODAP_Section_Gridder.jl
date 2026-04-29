@@ -144,19 +144,15 @@ function checkVariableExceptions(;expocode::Union{String,String15},variableName:
         return collect(1:length(variable)) # Return all bottle numbers
     end
 
-    goodIdx = collect(1:length(variable))
-
-    for idx in colIdx
-        criteriaMatched = fill(0,size(goodIdx))
-        stnVal = stationList[idx]
-        maxPrsVal = maxPressureList[idx]; minPrsVal = minPressureList[idx]
-        criteriaMatched[station .== stnVal] .+=1
-        criteriaMatched[pressure .< maxPrsVal] .+=1
-        criteriaMatched[pressure .> minPrsVal] .+=1
-
-        goodIdx[criteriaMatched .== 3] .= -1
-    end
-    goodIdx = goodIdx[goodIdx .> 0]
+    goodIdx = legacy_variable_exception_good_indices(
+        length(variable),
+        station,
+        pressure,
+        stationList,
+        minPressureList,
+        maxPressureList,
+        colIdx,
+    )
     # Since we know we should have removed something, we can test its worked and
     # return an error if not pretty trivially
     if length(goodIdx) == length(variable)
@@ -181,18 +177,7 @@ function checkHorzLenFactor(;expocode::Union{String,String15},variableName::Stri
 
 
     exceptionDataFrame = CSV.read(HORZLEN_EXCEPTIONS,DataFrame)
-    EDFsubset = exceptionDataFrame[(exceptionDataFrame.Expocode .== expocode) .&
-    (exceptionDataFrame.Variable .== variableName) .&
-    (exceptionDataFrame.Gridding .== griddingType), :]
-    if prod(size(EDFsubset)) > 0
-        println("Expocode contains horizonal correlation length exception for selected variable and gridding")
-        factor = EDFsubset[!,"Factor"]
-        return factor[1]
-    elseif griddingType == "isobaric"
-        return 1
-    elseif griddingType == "isopycnic"
-        return 1.0
-    end
+    return legacy_horzlen_factor(exceptionDataFrame, expocode, variableName, griddingType)
 end
 
 function cocatenateCruises(expocodes::Vector{String}
