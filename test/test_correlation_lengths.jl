@@ -49,3 +49,65 @@ end
     searchf = GSG.corrlen_retry_search(x -> x + 1, 3)
     @test searchf(2) == 9
 end
+
+function GSG.fithorzlen(_x::Tuple{Vector{Int},Vector{Int},Vector{Int}}, data::Vector{Int}, pr_grid::Vector{Int}; searchz, kwargs...)
+    value = searchz(2)
+    value < 4 && error("retry")
+    return ([value], nothing)
+end
+
+function GSG.fitvertlen(_x::Tuple{Vector{Float64},Vector{Float64},Vector{Float64}}, data::Vector{Float64}, pr_grid::Vector{Float64}; kwargs...)
+    if haskey(kwargs, :smoothz)
+        return ([0.2, 0.4], nothing)
+    end
+    return ([200.0, 1200.0], nothing)
+end
+
+function GSG.fithorzlen(_x::Tuple{Vector{Float64},Vector{Float64},Vector{Float64}}, data::Vector{Float64}, pr_grid::Vector{Float64}; kwargs...)
+    if haskey(kwargs, :smoothz)
+        error("force prescribed density-space lenx")
+    end
+    return ([1.0, 3.0], nothing)
+end
+
+@testset "fithorzlen_increasing_search" begin
+    lenx, _ = GSG.fithorzlen_increasing_search(([1], [2], [3]), [4], [5]; searchz=x -> x, multiplier=1)
+    @test lenx == [4]
+
+    @test_throws ErrorException GSG.fithorzlen_increasing_search(nothing, nothing, nothing; searchz=x -> x, multiplier=16)
+end
+
+@testset "calcCorrLengths wrapper" begin
+    variable = [1.0, 2.0, 3.0]
+    lenz, lenxkm = GSG.calcCorrLengths(
+        variable=variable,
+        obsLat=[10.0, 20.0, 30.0],
+        obsLon=variable,
+        obsPres=[0.0, 10.0, 20.0],
+        presGrid=[0.0, 10.0, 20.0],
+        pressureStepNumber=2,
+        lenxFactor=0,
+    )
+
+    @test length(lenz) == 3
+    @test length(lenxkm) == 3
+    @test all(isfinite, lenz)
+    @test all(==(0.0), lenxkm)
+end
+
+@testset "calcDensityCorrLengths wrapper" begin
+    lenz, lenxkm = GSG.calcDensityCorrLengths(
+        [1.0, 2.0, 3.0];
+        obsLat=[10.0, 20.0, 30.0],
+        obsLon=[100.0, 101.0, 102.0],
+        obsSigma=[0.0, 1.0, 2.0],
+        sigGrid=[0.0, 1.0, 2.0],
+        lenxPrescribed=2.0,
+        sigmaStepNumber=2,
+    )
+
+    @test lenz ≈ [0.2, 0.3, 0.4]
+    @test length(lenxkm) == 3
+    @test lenxkm[1] ≈ lenxkm[2]
+    @test lenxkm[2] ≈ lenxkm[3]
+end

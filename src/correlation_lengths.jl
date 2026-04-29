@@ -70,7 +70,7 @@ function calcDensityCorrLengths(variable::Vector{Float64}
                                 ,sigmaStepNumber::Integer=10
                                 ,verticalSearchRange::Float64=0.0001)
     # Calculate correlation lengths in density space.
-    goodIdx = non_nan_indices(variable,obsSigma)
+    goodIdx = non_nan_index_pairs(variable,obsSigma)
     lenz, _ = fitvertlen((obsLon[goodIdx], obsLat[goodIdx], obsSigma[goodIdx])
     ,variable[goodIdx],sigGrid[1:sigmaStepNumber:end],searchz=verticalSearchRange
     ,smoothz=0.1)
